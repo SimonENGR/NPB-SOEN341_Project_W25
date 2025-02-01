@@ -9,14 +9,14 @@ Communication is a must when it comes to working on large projects, maintaining 
 </p>
 
 # Team members
-Simon Guidon\  
-Emily Ng Youn Chen\  
-Diego Samanez Denis\  
-George Nashed\  
-Rohan Kumar\  
-Muthui Mureithi\  
+Simon Guidon  
+Emily Ng Youn Chen  
+Diego Samanez Denis  
+George Nashed  
+Rohan Kumar  
+Muthui Mureithi  
 
 # Technologies
-React.js\  
-Node.js\  
-MySQL\  
+React.js  
+Node.js  
+MySQL  
