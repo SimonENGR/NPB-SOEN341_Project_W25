@@ -1,0 +1,215 @@
+.login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.login-container {
+    display: flex;
+    width: 800px;
+    height: 500px;
+    border-radius: 15px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.login-image {
+    width: 40%;
+    background: linear-gradient(-135deg, #008000, #FFFF00);
+    background-size: cover;
+    position: relative;
+}
+
+.login-image {
+    width: 40%;
+    background: linear-gradient(-135deg, #008000, #FFFF00);
+    background-size: cover;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-weight: bold;
+    position: relative;
+}
+
+.login-image::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("https://www.transparenttextures.com/patterns/diamond-upholstery.png");
+    background-repeat: repeat;
+    background-size: auto;
+    opacity: 0.4;
+    mix-blend-mode: overlay;
+}
+
+.chat-app-logo {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 60px;
+    height: auto;
+}
+
+.chat-app-title {
+    font-size: 28px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    z-index: 1;
+}
+
+.chat-app-message {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+    max-width: 80%;
+    z-index: 1;
+}
+
+.login-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+}
+
+.text {
+    color: #008000;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.underline {
+    width: 50px;
+    height: 4px;
+    background: #008000;
+    border-radius: 5px;
+}
+
+.fields {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    align-items: center;
+}
+
+.input {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 250px;
+    height: 40px;
+    background: #f0f0f0;
+    border-radius: 6px;
+    padding: 8px;
+}
+
+.input img {
+    width: 18px;
+    height: auto;
+    margin: 0 10px;
+}
+
+.input input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 14px;
+}
+
+.forgot-pass {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 12px;
+}
+
+.forgot-pass span {
+    color: #008000;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.submission-container {
+    display: flex;
+    gap: 10px;
+    margin: 20px auto;
+}
+
+.submit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 120px;
+    height: 40px;
+    color: #fff;
+    background: #008000;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.submit:hover {
+    background: #006600;
+}
+
+.gray {
+    background: #EAEAEA;
+    color: #676767;
+}
+
+.social-login {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.social-login p {
+    font-size: 12px;
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.social-icons img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.social-icons img:hover {
+    transform: scale(1.1);
+}

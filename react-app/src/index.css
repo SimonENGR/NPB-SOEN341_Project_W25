@@ -1,0 +1,30 @@
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    height: 100vh;
+    background: linear-gradient(135deg, #FFFF00, #008000);
+    background-size: cover;
+    position: relative;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url("https://www.transparenttextures.com/patterns/diamond-upholstery.png");
+    background-repeat: repeat;
+    background-size: auto;
+    opacity: 0.4;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: -1;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
