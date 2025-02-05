@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel = "stylesheet" href = "../styles.css">
+    <title>title</title>
+
+</head>
+
+
+<body>
+<div>
+    <div class="top">
+        <form>
+            <h1>Welcome to chat haven</h1>
+        </form>
+    </div>
+    <form action="/login" method="POST"  class="form-horizontal">
+        <div class="wrapper">
+            <div class="login-input-box">
+                <label>
+                    <input type="text" name="username" placeholder="Enter username" required>
+                </label>
+            </div>
+        </div>
+        <div class="wrapper1">
+            <div class="password-input-box"></div>
+            <label>
+                <input type="password" name="password" placeholder="Enter password" required>
+            </label>
+        </div>
+
+        <div class="login">
+            <form>
+                <button>Login</button>
+            </form>
+        </div>
+        <div class="remember-password">
+            <form>
+                <a href="#">Forgot password?</a>
+            </form>
+        </div>
+        <div class="register-link">
+            <form>
+                <p>No account?
+                    <a href="/register">Register</a>
+            </form>
+        </div>
+    </form>
+</div>
+</body>
+</html>
