@@ -1,4 +1,4 @@
-:root {
+ /* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -11,23 +11,31 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  padding: 100px;
+} */
+
+
+.logo-container {
+  flex: 1;
+  display: flex;
+  position: absolute;
+  left: 150px;
+  top: 150px;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+.logo {
+  width: 1000%;
+  max-width: 300px;
 }
-a:hover {
-  color: #535bf2;
-}
+
 
 body {
   margin: 0;
   place-items: center;
   min-width: 320px;
-  min-height: 100vh;
-  background: linear-gradient(#2A00B7,#42006C);
+  min-height: 590px;
+  background: linear-gradient(#1ca3d8,#1b50f0);
   text-align: center;
 }
 
@@ -43,7 +51,7 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #541616;
   cursor: pointer;
   transition: border-color 0.25s;
 }
@@ -55,17 +63,25 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; 
+}
+
 .container{
   display: flex;
   flex-direction: column;
   margin: auto;
   margin-top: 200px;
-  background: #ffff;
-  padding-bottom: 30px;
-  padding: auto;
+  padding: 10px;
   margin: auto;
   text-align: auto;
   width: 600px;
+  position: absolute;
+  right: 0px;
+  height: 100vh;
 }
 
 .title{
@@ -75,7 +91,7 @@ button:focus-visible {
   gap:9px;
   width: 100%;
   margin-top: 30px;
-  color: #3c009d;
+  color: #4c00b4;
   font-size: 48px;
   font-weight: 700;
 }
@@ -93,7 +109,7 @@ button:focus-visible {
   margin: auto;
   width: 480px;
   height: 80px;
-  background: #eaeaea;
+  background: #a8bdbd;
   border-radius: 6px;
   margin-bottom: 20px;
 }
