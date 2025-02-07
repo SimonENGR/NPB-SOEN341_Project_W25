@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import user_icon from 'C:/Users/Simon PC/Documents/Concordia 2023 2026/Winter 2025/SOEN 341/NPB-SOEN341_Project_W25-main_modified/chatapp/client/src/assets/person.png';
-import email_icon from 'C:/Users/Simon PC/Documents/Concordia 2023 2026/Winter 2025/SOEN 341/NPB-SOEN341_Project_W25-main_modified/chatapp/client/src/assets/email.png';
-import password_icon from 'C:/Users/Simon PC/Documents/Concordia 2023 2026/Winter 2025/SOEN 341/NPB-SOEN341_Project_W25-main_modified/chatapp/client/src/assets/password.png';
-import 'C:/Users/Simon PC/Documents/Concordia 2023 2026/Winter 2025/SOEN 341/NPB-SOEN341_Project_W25-main_modified/chatapp/client/src/Styling/LoginPage.css';
+import user_icon from 'C:/Users/dsama/NPB-SOEN341_Project_W25/chatapp/client/src/assets/person.png';
+import email_icon from 'C:/Users/dsama/NPB-SOEN341_Project_W25/chatapp/client/src/assets/email.png';
+import password_icon from 'C:/Users/dsama/NPB-SOEN341_Project_W25/chatapp/client/src/assets/password.png';
+import 'C:/Users/dsama/NPB-SOEN341_Project_W25/chatapp/client/src/Styling/LoginPage.css';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 function LoginPage() {
