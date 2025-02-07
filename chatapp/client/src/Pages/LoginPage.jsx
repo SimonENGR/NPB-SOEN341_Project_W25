@@ -84,15 +84,16 @@ function LoginPage() {
                         )}
 
                         <div className="input">
-                            <img src={email_icon} alt="Email Icon" />
-                            <input
-                                type="email"
-                                placeholder="Email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
+                            <img src={user_icon} alt="User Icon" />
+                                <input
+                                    type="text"
+                                    placeholder="Username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                />
                         </div>
+
 
                         <div className="input">
                             <img src={password_icon} alt="Password Icon" />
