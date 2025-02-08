@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import user_icon from 'C:/Users/dsama/NPB-SOEN341_Project_W25/chatapp/client/src/assets/person.png';
-import email_icon from 'C:/Users/dsama/NPB-SOEN341_Project_W25/chatapp/client/src/assets/email.png';
-import logo from 'C:/Users/dsama/NPB-SOEN341_Project_W25/chatapp/client/src/assets/chat.webp';
-import password_icon from 'C:/Users/dsama/NPB-SOEN341_Project_W25/chatapp/client/src/assets/password.png';
-import 'C:/Users/dsama/NPB-SOEN341_Project_W25/chatapp/client/src/Styling/LoginPage.css';
+import user_icon from '../assets/person.png';
+import email_icon from '../assets/email.png';
+import logo from '../assets/chat.webp';
+import password_icon from '../assets/password.png';
+import '../Styling/LoginPage.css';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 function LoginPage() {
@@ -34,7 +34,7 @@ function LoginPage() {
           if (response.status === 200) {
               setIsLoggedIn(true); // Set login state
               alert(response.data.message); // Show success message
-              navigate('./ChatPage'); // Redirect to chat page
+              navigate('/chat'); // Redirect to chat page
           }
       } catch (error) {
           console.error('Login error:', error); // Log the error
