@@ -11,7 +11,7 @@ app.use(express.json()); // Ensure that the body parser is configured correctly
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',  // Change if needed
-    password: 'password',  // Add MySQL password if set
+    password: 'DegioSD1806!',  // Add MySQL password if set
     database: 'chatapp'
 });
 
@@ -25,12 +25,12 @@ db.connect(err => {
 
 // Register a new user
 app.post('/register', async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.query(
-        'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-        [username, email, hashedPassword],
+        'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
+        [username, email, hashedPassword, role],
         (err, results) => {
             if (err) return res.status(500).send(err);
             res.status(201).send('User registered');
