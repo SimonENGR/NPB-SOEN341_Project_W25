@@ -12,8 +12,8 @@ Communication is a must when it comes to working on large projects, maintaining 
 
 # Team members
 Simon Guidon(Backend, Database)  
-Emily Ng Youn Chen(Frontend)  
-Diego Samanez Denis(Backend, user stories)  
+Emily Ng Youn Chen(Frontend, Documentation)  
+Diego Samanez Denis(Backend, Documentation)  
 George Nashed(Frontend)  
 Rohan Kumar(Backend, Database)  
 Muthui Mureithi(Backend)  
