@@ -1,7 +1,9 @@
 ## SOEN341 GROUP PROJECT
 
 # Objective
-Developing a communication platform called ChatHaven.
+<p align="justify">
+Our objective in this project is to develop a middle -fidelity prototype of a message exchanging platform over the span of 4 sprints, where each sprint has a duration of 2 weeks. The development of the product is done in groups of 6 following the Agile development apporach. Github is used as the platform of choice for version control, access control, bug tracking, software feature requests, task management, and continuous integration.
+</p>
 
 # Project detail
 <p align="justify">
@@ -9,12 +11,12 @@ Communication is a must when it comes to working on large projects, maintaining 
 </p>
 
 # Team members
-Simon Guidon  
-Emily Ng Youn Chen  
-Diego Samanez Denis  
-George Nashed  
-Rohan Kumar  
-Muthui Mureithi  
+Simon Guidon(Backend, Database)  
+Emily Ng Youn Chen(Frontend, Documentation)  
+Diego Samanez Denis(Backend, Documentation)  
+George Nashed(Frontend)  
+Rohan Kumar(Backend, Database)  
+Muthui Mureithi(Backend)  
 
 # Technologies
 React.js  

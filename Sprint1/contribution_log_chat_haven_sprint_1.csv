@@ -1,0 +1,13 @@
+Start Date,End Date,Contributor,Task Description,Time Spent
+24/01/25,27/01/25,Simon,- Create user stories and tasks (+ extra verification) - Setup repo, organisation and branch rules - Setup cloud service to host database - Setup database users, and permissions,8 hours
+24/01/25,25/01/25,Muthui,- Create user stories and tasks (+ extra verification) - Write the README file,3 hours
+24/01/25,25/01/25,Diego,- Created user stories and tasks - Setup skeleton project for front and backend with the tech stack - Reviewed concept art - Created PR for creating a user in HTTP endpoint,5 hours
+24/01/25,26/01/25,George,- Create user stories and tasks - Begin learning React - Create UI designs - Some frontend code,4 hours
+29/01/25,31/02/25,Rohan,- Worked on the UI design - Learned React - Did some frontend coding (login) - Worked on some user stories,4 hours
+30/01/25,31/01/25,Emily,- Learn MySQL syntax - Create build/drop/populate scripts for users table - Reviewed PRs - Researched and implemented login and authentication in the backend - Implemented functionality to connect frontend login page to backend API - Helped a little with account creation frontend - Fixed various bugs - Made sprint planning doc and meeting minutes,4 hours
+27/02/25,07/02/25,Simon,- Implement the Register page UI according to designs. - Implement the Register page logic and connect it with backend API. - Help work and fix the login page. - Create a functional navbar - Reviewed PRs. - Helped out with project running and GitHub. - Completed the README file.,30 hours
+28/02/25,07/02/25,Muthui,- Create build and populate scripts for the user team creation - Researched how to implement hashing in client and server - Merged PRs - Reviewed repo maintainability,25 hours
+02/02/25,07/02/25,Diego,- Continued learning React - Created more UI designs - Some frontend code - Researched potential functions to implement,12 hours
+01/02/25,07/02/25,George,- Worked on the UI design - Learned React - Did some frontend coding (login) - Worked on some user stories,10 hours
+01/02/25,07/02/25,Rohan,- Continued learning React - Created folders and proper file names in accordance to task 11 (no merge conflicts) - Implemented the login page based on UI design - Researched APIs (Postman and Insomnia) - Helped finalize the final UI designs for login and register page,12 hours
+03/02/25,07/02/25,Emily,- Worked on the UI design - Learned React - Helped with some frontend coding (login) - Worked on some user stories - Research on APIs,10 hours
