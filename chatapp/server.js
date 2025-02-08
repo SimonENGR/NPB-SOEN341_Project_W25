@@ -1,12 +1,13 @@
 require('dotenv').config();
 const express = require('express');
+
 const mysql = require('mysql2');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
-
 const app = express();
 app.use(cors());
 app.use(express.json()); // Ensure that the body parser is configured correctly
+
 
 const db = mysql.createConnection({
     host: 'localhost',
@@ -72,6 +73,65 @@ app.post('/login', async (req, res) => {
             res.status(200).send({ message: 'Login successful' });
         });
     });
+});
+
+app.post('/addChannel', async (req, res) => {
+    const {channelName, channelMembers} = req.body;
+    console.log('Channel Addition attempt: ', {channelName, channelMembers});
+
+    if(!channelName){
+        return(res.status(400).send('Channel name is required.'))
+    }
+    try {
+        const memberUsernames = channelMembers;
+
+        const [existingUsers] = await db.promise().query(
+            'SELECT username FROM users WHERE username IN (?)',
+            [memberUsernames]
+        );
+
+        // Find any usernames that don’t exist
+        const missingUsers = memberUsernames.filter(name => !existingUsernames.includes(name));
+
+        if (missingUsers.length > 0) {
+            return res.status(400).json({ message: `User(s) not found: ${missingUsers.join(", ")}` });
+        }
+
+        // Insert the channel into the database
+        await db.promise().query(
+            'INSERT INTO channels (channelName, channelMembers) VALUES (?, ?)',
+            [channelName, JSON.stringify(existingUsers)]
+        );
+
+        return res.send({ message: "Channel created successfully.", channelName, channelMembers: existingUsers });
+
+    } catch (error) {
+        return res.status(500).send({ message: 'Error creating channel', error: error.message });
+    }
+});
+
+app.get('/getUserRole', async (req, res) => {
+    const userId = req.user.id;
+    try{
+        const [rows] = await db.promise().query('SELECT role FROM users WHERE id = ?', [userId]); 
+        if (rows.length > 0) {
+            return res.send({ role: rows[0].role });
+        }   else {
+        return res.status(404).send('User not found');
+        }
+    }   catch (error) {
+            return res.status(500).send('Error fetching user role');
+        }
+});
+
+app.get('/getChannels', async (req, res) => {
+    const userId = req.user.id;
+    try{
+        const [channels] = await db.promise().query('SELECT * FROM channels WHERE JSON_CONTAINS(channelMembers, ?)',[JSON.stringify(userId)]);
+        return res.send(channels);
+    } catch (error) {
+        return res.status(500).send('Error fetching channels');
+    }
 });
 
 
