@@ -1,11 +1,12 @@
 require('dotenv').config();
 const express = require('express');
-
+const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const mysql = require('mysql2');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const app = express();
-app.use(cors());
+app.use(cors({origin: 'http://localhost:3000', credentials: true}));
 app.use(express.json()); // Ensure that the body parser is configured correctly
 
 
@@ -15,6 +16,27 @@ const db = mysql.createConnection({
     password: 'DegioSD1806!',  // Add MySQL password if set
     database: 'chatapp'
 });
+
+const sessionStore = new MySQLStore({}, db);
+
+app.use(session({
+        secret: 'your-secret-key',
+        resave: false,
+        store: sessionStore,
+        saveUninitialized: false,
+        cookie: { secure: false,
+                  sameSite: 'lax'
+                },
+    })
+);
+
+const authMiddleware = (req, res, next) => {
+    console.log('Session Data:', req.session);
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+    }
+    next();
+};
 
 db.connect(err => {
     if (err) {
@@ -69,9 +91,19 @@ app.post('/login', async (req, res) => {
                 return res.status(400).send('Username or password is incorrect');
             }
 
-            console.log('Login successful');
-            res.status(200).send({ message: 'Login successful' });
-        });
+            req.session.userId = user.id;
+            req.session.username = user.username;
+            req.session.save(err => {
+                if (err) {
+                    console.error('Session save error:', err);
+                    return res.status(500).send('Server error');
+                }
+                console.log('Session ID:', req.session.id);
+                console.log('Stored Session Data:', req.session);
+                res.status(200).send({ message: 'Login successful', userId: user.id, username: user.username});
+            });
+
+         });
     });
 });
 
@@ -83,15 +115,14 @@ app.post('/addChannel', async (req, res) => {
         return(res.status(400).send('Channel name is required.'))
     }
     try {
-        const memberUsernames = channelMembers;
-
         const [existingUsers] = await db.promise().query(
             'SELECT username FROM users WHERE username IN (?)',
-            [memberUsernames]
+            [channelMembers]
         );
+        const existingUsernames = existingUsers.map(user => user.username);
 
         // Find any usernames that don’t exist
-        const missingUsers = memberUsernames.filter(name => !existingUsernames.includes(name));
+        const missingUsers = channelMembers.filter(name => !existingUsernames.includes(name));
 
         if (missingUsers.length > 0) {
             return res.status(400).json({ message: `User(s) not found: ${missingUsers.join(", ")}` });
@@ -100,19 +131,20 @@ app.post('/addChannel', async (req, res) => {
         // Insert the channel into the database
         await db.promise().query(
             'INSERT INTO channels (channelName, channelMembers) VALUES (?, ?)',
-            [channelName, JSON.stringify(existingUsers)]
+            [channelName, JSON.stringify(existingUsernames)]
         );
 
-        return res.send({ message: "Channel created successfully.", channelName, channelMembers: existingUsers });
+        return res.send({ message: "Channel created successfully.", channelName, channelMembers: existingUsernames });
 
     } catch (error) {
         return res.status(500).send({ message: 'Error creating channel', error: error.message });
     }
 });
 
-app.get('/getUserRole', async (req, res) => {
-    const userId = req.user.id;
+app.get('/getUserRole', authMiddleware, async (req, res) => {
     try{
+        const userId = req.session.userId;
+
         const [rows] = await db.promise().query('SELECT role FROM users WHERE id = ?', [userId]); 
         if (rows.length > 0) {
             return res.send({ role: rows[0].role });
@@ -125,9 +157,10 @@ app.get('/getUserRole', async (req, res) => {
 });
 
 app.get('/getChannels', async (req, res) => {
-    const userId = req.user.id;
     try{
-        const [channels] = await db.promise().query('SELECT * FROM channels WHERE JSON_CONTAINS(channelMembers, ?)',[JSON.stringify(userId)]);
+        const username = req.session.username;
+
+        const [channels] = await db.promise().query('SELECT * FROM channels WHERE JSON_CONTAINS(channelMembers, ?)',[JSON.stringify(username)]);
         return res.send(channels);
     } catch (error) {
         return res.status(500).send('Error fetching channels');

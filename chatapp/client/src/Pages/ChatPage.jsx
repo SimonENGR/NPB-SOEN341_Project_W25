@@ -8,16 +8,16 @@ function ChatPage() {
   const [channelMembers, setChannelMembers] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [channels, setChannels] = useState([]);
-  const [userRole, setUserRole] = useState(null);
+  const [userRole, setUserRole] = useState('');
 
   useEffect( () => {
     const fetchUserData = async () => {
       try{
-        const roleResponse = await axios.get('http://localhost:3001/getUserRole');
+        const roleResponse = await axios.get('http://localhost:3001/getUserRole', {withCredentials: true});
         console.log('User role:', roleResponse.data.role); 
         setUserRole(roleResponse.data.role);
 
-        const channelsResponse = await axios.get('http://localhost:3001/getChannels');
+        const channelsResponse = await axios.get('http://localhost:3001/getChannels', {withCredentials: true});
         setChannels(channelsResponse.data);
       }
       catch (error) {
@@ -32,9 +32,8 @@ function ChatPage() {
       try{
           const response = await axios.post('http://localhost:3001/addChannel', { 
               channelName: channelName,
-              // channelLogo: channelLogo, 
               channelMembers: channelMembers.split(",").map(member => member.trim()),
-          });
+          }, {withCredentials: true});
           alert(response.data.message || "Channel created successfully!");
 
           setChannels(prevChannels => [...prevChannels, response.data]);
