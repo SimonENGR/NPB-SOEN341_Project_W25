@@ -24,12 +24,10 @@ function LoginPage() {
           console.log('Attempting login with:', { username, password }); // Debugging log
   
           console.log('Sending login request to http://localhost:3001/login');
-          const response = await axios.post('http://localhost:3001/login', {
-    username,
-    password
-          });
+          const response = await axios.post('http://localhost:3001/login', {username,password}, { withCredentials: true });
   
           console.log('Login response:', response); // Debugging log
+
   
           if (response.status === 200) {
               setIsLoggedIn(true); // Set login state
