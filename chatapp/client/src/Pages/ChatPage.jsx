@@ -1,5 +1,6 @@
 import React, { useState, useEffect}from 'react';
 import axios from 'axios';
+import '../Styling/ChatPage.css';
 
 function ChatPage() {
   const [showChannelAdd, setChannelAdd] = useState(false);
@@ -47,20 +48,23 @@ function ChatPage() {
       }
   };
   return (
-    <div>
-      <h2>Welcome to the Chat!</h2>
-      {userRole === 'Admin' && <button onClick={() => setChannelAdd(true)}>+</button>}
-      {channels.map(channel => (
+    <div className="sidebar">
+      {}
+      <h2>Welcome to ChatHaven!</h2>
+      {}
+      <div className="sidebar-buttons">
+        {userRole === 'Admin' && <button onClick={() => setChannelAdd(true)} className="add-channel-button">+</button>}
+        {channels.map(channel => (
           <button
           key= {channel.id}
           onClick={() => alert(`Navigating to ${channel.channelName}`)}>
             {channel.channelName}
           </button>
         ))}
-      {showChannelAdd && 
-      <div>
-        <h2>Create a Channel</h2>
-        <form onSubmit = {handleChannelAdd}>
+    </div>
+    {}
+      {showChannelAdd && (
+        <form className="create-channel-form" onSubmit = {handleChannelAdd}>
           <input 
           type='text' 
           placeholder='Channel Name' 
@@ -69,16 +73,16 @@ function ChatPage() {
 
           <input
           type='text'
-          placeholder='Channel Members'
+          placeholder='Channel Members (comma-seperated)'
           value={channelMembers}
           onChange = {(e) => setChannelMembers(e.target.value)} required />
 
           <button type='submit'>Create Channel</button>
           <button type='button' onClick={() => setChannelAdd(false)}>Cancel</button>
         </form>
-        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-      </div>
-      }
+      )}
+      {}
+      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
     </div>
 
   );
