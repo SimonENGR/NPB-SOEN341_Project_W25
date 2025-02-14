@@ -4,7 +4,7 @@ import user_icon from '../assets/person.png';
 import email_icon from '../assets/email.png';
 import logo from '../assets/chat.webp';
 import password_icon from '../assets/password.png';
-import '../Styling/LoginPage.css';
+import '../Styling/LoginPage.module.css';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 function LoginPage() {
