@@ -5,7 +5,7 @@ import email_icon from '../assets/email.png';
 import logo from '../assets/chat.webp';
 import password_icon from '../assets/password.png';
 import '../Styling/LoginPage.module.css';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom'; 
 
 function LoginPage() {
     const [username, setUsername] = useState('');
@@ -15,33 +15,33 @@ function LoginPage() {
     const [action, setAction] = useState("Login");
     const [errorMessage, setErrorMessage] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const navigate = useNavigate(); // For redirection on successful login
+    const navigate = useNavigate(); 
 
-    // Handle login
+   
     const handleLogin = async (e) => {
-      e.preventDefault(); // Prevent form submission from refreshing the page
+      e.preventDefault(); 
       try {
-          console.log('Attempting login with:', { username, password }); // Debugging log
+          console.log('Attempting login with:', { username, password }); 
   
           console.log('Sending login request to http://localhost:3001/login');
           const response = await axios.post('http://localhost:3001/login', {username,password}, { withCredentials: true });
   
-          console.log('Login response:', response); // Debugging log
+          console.log('Login response:', response); 
 
   
           if (response.status === 200) {
-              setIsLoggedIn(true); // Set login state
-              alert(response.data.message); // Show success message
-              navigate('/chat'); // Redirect to chat page
+              setIsLoggedIn(true);
+              alert(response.data.message); 
+              navigate('/chat'); 
           }
       } catch (error) {
-          console.error('Login error:', error); // Log the error
+          console.error('Login error:', error); 
           setErrorMessage(error.response?.data?.sqlMessage || 'An error occurred');
       }
   };
   
 
-    // Handle registration
+    
     const handleRegister = async (e) => {
         e.preventDefault();
         const userRole = role || "User";  
@@ -52,15 +52,14 @@ function LoginPage() {
                 password,
                 role: userRole
             });
-            alert(response.data); // "User registered"
-            
-            // After successful registration, reset form and navigate to login page
+            alert(response.data);
+
             setUsername('');
             setEmail('');
             setPassword('');
             setRole('');
             setAction("Login");
-            navigate('/'); // Redirect to the login page
+            navigate('/'); 
         } catch (error) {
             setErrorMessage(error.response?.data?.sqlMessage || 'An error occurred');
         }
@@ -68,12 +67,12 @@ function LoginPage() {
 
     return (
         <div className="login-container">
-        {/* Left side - Logo */}
+        {}
         <div className="logo-container">
             <img src={logo} alt="App Logo" className="logo" />
         </div>
 
-        {/* Right side - Login form */}
+        {}
         <div className="container">
             <div className="header">
             <h2 className="title">{action}</h2>
@@ -117,18 +116,22 @@ function LoginPage() {
                 </div>
                 {action === "Sign Up" && (
                 <div className="checkbox-container">
-                    <div className="checkbox">
+                <div className="checkbox">
+                  <label className="toggle-switch">
                     <input
-                        type="checkbox"
-                        checked={role === "Admin"}
-                        onChange={(e) => setRole(e.target.checked ? "Admin" : "User")}
-                    /> 
-                    <label className="checkbox-label">Admin privileges</label>
-                    </div>
+                      type="checkbox"
+                      checked={role === "Admin"}
+                      onChange={(e) => setRole(e.target.checked ? "Admin" : "User")}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                  <span className="checkbox-label">Admin Privileges</span>
                 </div>
+              </div>
+              
                 )}
 
-                {/* Submit Button */}
+                {}
                 {action === "Sign Up" && (
                     <button type="submit" className="submit">
                     Register
@@ -142,7 +145,7 @@ function LoginPage() {
                 )}
                 </form>
 
-                {/* Display error message if login or registration fails */}
+                {}
             </div>
 
             {action === "Login" && (
@@ -171,7 +174,7 @@ function LoginPage() {
         {isLoggedIn && (
             <div className="chatbox">
             <h3>Welcome to the Chat!</h3>
-            {/* You can add your chat functionality here */}
+            {}
             </div>
         )}
         </div>
