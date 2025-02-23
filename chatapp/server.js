@@ -1,3 +1,4 @@
+//making changes
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -13,14 +14,14 @@ app.use(express.json()); // Ensure that the body parser is configured correctly
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',  // Change if needed
-    password: 'DegioSD1806!',  // Add MySQL password if set
+    password: '1q2w3e4r5tMySQL',  // Add MySQL password if set
     database: 'chatapp'
 });
 
 const sessionStore = new MySQLStore({}, db);
 
 app.use(session({
-        secret: 'your-secret-key',
+        secret: 'we-do-procrastinate',//'your-secret-key'
         resave: false,
         store: sessionStore,
         saveUninitialized: false,
@@ -167,7 +168,46 @@ app.get('/getChannels', async (req, res) => {
     }
 });
 
+//Modification
+app.post("/sendMessage", async (req, res) => {
+    const { channelName, username, chat_content, chat_time, dm, receiver  } = req.body;
 
+    if (!dm=== undefined || !username || !chat_content || !chat_time) {//channelName and receiver couldbe empty
+        return res.status(400).json({ error: "All fields are required." });
+    }
+
+    try {
+        const query = "INSERT INTO all_chats_in_haven (channelName, username, chat_content, chat_time, dm, receiver) VALUES (?, ?, ?, ?, ?, ?)";
+        await db.promise().query(query, [channelName||null, username, chat_content, chat_time, dm?1:0, receiver||null]);
+
+        res.json({ success: true, message: "Message sent successfully!" });
+    } catch (error) {
+        console.error("Error inserting message:", error);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+// Endpoint to fetch messages for a specific channel
+app.get("/getMessages/:channelName", async (req, res) => {
+    const { channelName } = req.params;
+
+    try {
+        const query = "SELECT username, chat_content, chat_time FROM all_chats_in_haven WHERE channelName = ? ORDER BY chat_time ASC";
+        const [messages] = await db.promise().query(query, [channelName]);
+        res.json(messages);
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+app.get('/getUsername', (req, res) => {// sends usename to frontend
+    //console.log(req.session.username);
+    if (req.session.username) {
+        res.json({ username: req.session.username });  // Sends username if it exists in the session
+    } else {
+        res.status(401).json({ error: "Not logged in" });
+    }
+});
 // Start the server
 app.listen(3001, () => {
     console.log('Server is running on port 3001');
