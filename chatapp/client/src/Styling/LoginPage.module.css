@@ -1,7 +1,8 @@
-
-.logo-container {
-  flex: 1;
+/* Full Page Background with Restored Texture */
+.login-wrapper {
+  height: 100vh;
   display: flex;
+<<<<<<< Updated upstream
   position: absolute;
   left: 150px;
   top: 150px;
@@ -54,133 +55,197 @@ html, body {
 }
 
 .container{
-  display: flex;
-  flex-direction: column;
-  margin: auto;
-  margin-top: 200px;
-  padding: 10px;
-  margin: auto;
-  text-align: auto;
-  width: 600px;
-  position: absolute;
-  right: 0px;
-  height: 100vh;
+=======
+  justify-content: center;
+  align-items: center;
+  background-color: #1b50f0;
+  background-image: 
+    linear-gradient(30deg, rgba(28, 163, 216, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(28, 163, 216, 0.05) 87.5%, rgba(28, 163, 216, 0.05)),
+    linear-gradient(150deg, rgba(28, 163, 216, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(28, 163, 216, 0.05) 87.5%, rgba(28, 163, 216, 0.05)),
+    linear-gradient(30deg, rgba(28, 163, 216, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(28, 163, 216, 0.05) 87.5%, rgba(28, 163, 216, 0.05)),
+    linear-gradient(150deg, rgba(28, 163, 216, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(28, 163, 216, 0.05) 87.5%, rgba(28, 163, 216, 0.05)),
+    linear-gradient(60deg, rgba(97, 218, 251, 0.05) 25%, transparent 25.5%, transparent 75%, rgba(97, 218, 251, 0.05) 75%, rgba(97, 218, 251, 0.05)),
+    linear-gradient(60deg, rgba(97, 218, 251, 0.05) 25%, transparent 25.5%, transparent 75%, rgba(97, 218, 251, 0.05) 75%, rgba(97, 218, 251, 0.05));
+  background-size: 80px 140px;
+  background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
 }
 
-.title{
+/* Main Container (Divided into Left and Right) */
+.login-container {
+>>>>>>> Stashed changes
+  display: flex;
+  width: 800px;
+  height: 500px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Left Pane (Logo) */
+/* Left Pane (Logo) */
+.left-pane {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap:9px;
-  width: 100%;
-  margin-top: 30px;
+  justify-content: center;
+  padding: 20px;
+  background: #f4f4f4;
+  position: relative;
+}
+
+/* Title (Chathaven) */
+.title {
+  font-size: 28px;
   color: #4c00b4;
-  font-size: 48px;
-  font-weight: 700;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 15px;
 }
 
-.inputs{
-  margin-top: 55px;
+/* Updated Logo Styling */
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.logo {
+  width: 150px; /* Increased size */
+  max-width: 100%;
+}
+
+
+/* Right Pane (Login Form) */
+.right-pane {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
 }
 
-.input{
+/* Title */
+.title {
+  font-size: 28px;
+  color: #4c00b4;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+/* Input Fields */
+.input {
   display: flex;
   align-items: center;
-  margin: auto;
-  width: 480px;
-  height: 80px;
-  background: #a8bdbd;
-  border-radius: 6px;
-  margin-bottom: 20px;
-}
-
-.checkbox {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 480px; 
-  margin: auto;
-  height: 80px; 
-  margin-bottom: 20px;
-}
-
-.checkbox input {
-  margin-right: 30px;
-}
-
-.checkbox-label {
-  font-size: 16px; 
-  color: #333; 
-  font-weight: 500; 
-}
-
-.input img{
-  margin: 0px 30px;
-}
-
-.input input{
+  width: 100%;
+  max-width: 300px;
   height: 50px;
-  width: 400px;
-  background: transparent;
+  background: #eaeaea;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+.input img {
+  width: 20px;
+  margin-right: 10px;
+}
+
+.input input {
   border: none;
+  background: none;
   outline: none;
-  color: #797979;
-  font-size: 19px;
+  flex: 1;
+  font-size: 16px;
 }
 
-.forgot-password{
-  padding-left: 62px;
-  margin-top: 27px;
-  color: #797979;
-  font-size: 18px;
+/* Toggle Switch (Matches uploaded files) */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
 }
 
-.forgot-password span{
-  color: #4c00b4;
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 28px;
+  transition: 0.3s ease-in-out;
   cursor: pointer;
 }
 
-.submit-container{
-  display: flex;
-  gap: 30px;
-  margin: 60px auto;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s ease-in-out;
 }
 
-.submit{
+.toggle-switch input:checked + .slider {
+  background-color: #4c00b4;
+}
+
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(22px);
+}
+
+/* Buttons */
+.submit-container {
   display: flex;
   justify-content: center;
-  align-items: center;
+  margin-top: 15px;
+}
+
+.submit {
   width: 220px;
-  height: 59px;
-  color: #fff;
+  height: 50px;
   background: #4c00b4;
-  border-radius: 50px;
-  font-size: 19px;
-  font-weight: 700;
+  color: white;
+  border-radius: 25px;
   cursor: pointer;
-  margin:auto
+  border: none;
 }
 
-.gray{
+.switch-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.switch {
+  width: 100px;
+  height: 40px;
+  background: #4c00b4;
+  color: white;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.switch.gray {
   background: #a7c7c7;
-  color: #676767;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
