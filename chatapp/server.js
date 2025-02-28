@@ -13,7 +13,7 @@ app.use(express.json()); // Ensure that the body parser is configured correctly
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',  // Change if needed
-    password: 'DegioSD1806!',  // Add MySQL password if set
+    password: 'password',  // Add MySQL password if set
     database: 'chatapp'
 });
 
@@ -49,6 +49,19 @@ db.connect(err => {
 // Register a new user
 app.post('/register', async (req, res) => {
     const { username, email, password, role } = req.body;
+    //Check if username already exists in the database
+    db.query('SELECT * FROM users WHERE username = ?', [username], async (err, results) =>{
+        if (err){
+            console.error('Database query error: ', err)
+            return res.status(500).send('Server error');
+        }
+        //If username already exists, send error message
+        if (results.length > 0){
+            return res.status(400).send('Username already exists');
+        }
+    })
+
+    //Hash password and add user to database if username does not already exist 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.query(
@@ -60,6 +73,7 @@ app.post('/register', async (req, res) => {
         }
     );
 });
+
 
 // Login route
 app.post('/login', async (req, res) => {
@@ -107,24 +121,48 @@ app.post('/login', async (req, res) => {
     });
 });
 
+app.post('/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).send('Failed to log out');
+      }
+      console.log('Session destroyed');
+      res.status(200).send('Logged out successfully');
+    });
+  });
+
 app.post('/addChannel', async (req, res) => {
     const {channelName, channelMembers} = req.body;
     console.log('Channel Addition attempt: ', {channelName, channelMembers});
 
+    //requires a channel name
     if(!channelName){
         return(res.status(400).send('Channel name is required.'))
     }
+
+    //requires at least 2 members to create a channel
+    if (!channelMembers || channelMembers.length === 0){
+        return res.status(400).send('At least two channel members are required.')
+    }
+
     try {
         const [existingUsers] = await db.promise().query(
             'SELECT username FROM users WHERE username IN (?)',
             [channelMembers]
         );
+        
+        console.log('Existing users in DB: ', existingUsers);
+
         const existingUsernames = existingUsers.map(user => user.username);
+
+        console.log('Existing usernames: ', existingUsernames);
 
         // Find any usernames that don’t exist
         const missingUsers = channelMembers.filter(name => !existingUsernames.includes(name));
+        console.log('Missing user: ', missingUsers);
 
         if (missingUsers.length > 0) {
+            console.log("Returning error response: User(s) not found:", missingUsers);
             return res.status(400).json({ message: `User(s) not found: ${missingUsers.join(", ")}` });
         }
 
