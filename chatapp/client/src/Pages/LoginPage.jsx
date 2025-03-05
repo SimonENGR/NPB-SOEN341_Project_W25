@@ -61,7 +61,7 @@ function LoginPage() {
             setAction("Login");
             navigate('/'); 
         } catch (error) {
-            setErrorMessage(error.response?.data?.sqlMessage || 'An error occurred');
+            setErrorMessage(error.response?.data?.sqlMessage || 'User already exists');
         }
     };
 
@@ -100,6 +100,7 @@ function LoginPage() {
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                     />
                 </div>
                 )}
