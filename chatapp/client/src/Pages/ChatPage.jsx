@@ -93,7 +93,7 @@ function ChatPage() {
   };
 
 
-  //Fix this logout 
+  //logout 
   const handleLogout = async () => {
     console.log("Logout function triggered..."); 
     try {
