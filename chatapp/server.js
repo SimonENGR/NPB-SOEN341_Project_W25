@@ -46,6 +46,17 @@ db.connect(err => {
     console.log('Connected to MySQL database');
 });
 
+//Gets users for chat selection 
+app.get('/getUsers', authMiddleware, async (req, res) => {
+    try {
+        const [users] = await db.promise().query('SELECT id, username FROM users');
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).send('Error fetching users');
+    }
+});
+
 // Register a new user
 app.post('/register', async (req, res) => {
     const { username, email, password, role } = req.body;
@@ -122,12 +133,14 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
+    console.log("Before logout:", req.session);
     req.session.destroy((err) => {
       if (err) {
-        return res.status(500).send('Failed to log out');
+        console.error("Error destroying session:", err);
+        return res.status(500).send("Failed to log out");
       }
-      console.log('Session destroyed');
-      res.status(200).send('Logged out successfully');
+      console.log("After logout:", req.session);
+      res.status(200).send("Logged out successfully");
     });
   });
 
@@ -210,3 +223,4 @@ app.get('/getChannels', async (req, res) => {
 app.listen(3001, () => {
     console.log('Server is running on port 3001');
 });
+

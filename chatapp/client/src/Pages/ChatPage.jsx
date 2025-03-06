@@ -95,9 +95,9 @@ function ChatPage() {
 
   //Fix this logout 
   const handleLogout = async () => {
-    console.log("Logout function triggered...");  // Check if this is printed
+    console.log("Logout function triggered..."); 
     try {
-      await axios.post("http://localhost:300/logout", {}, { withCredentials: true });
+      await axios.post("http://localhost:3001/logout", {}, { withCredentials: true });
       alert("Logged out successfully!");
       navigate("/"); // Redirect to login page
     } catch (error) {
@@ -120,10 +120,15 @@ function ChatPage() {
               + Add Channel
             </button>
           )}
-        {/* <button onClick={handleLogout} className="logout-button">
+        <button onClick={handleLogout} className="logout-button">
           Logout
-        </button> */}
-        <button onClick={() => navigate("/")}>Logout</button> {/*temporary fix */}
+        </button>
+        
+        {/* DM Button */}
+        
+        <button onClick={() => navigate("/dm")} className="dm-button">
+            DM
+        </button>
         
         </div>
         <div className="channels-list">
