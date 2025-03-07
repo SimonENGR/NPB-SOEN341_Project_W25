@@ -1,0 +1,56 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # Backend setup
+      - name: Install backend dependencies
+        run: |
+          cd chat
+          npm install
+
+      - name: Run backend tests
+        run: |
+          cd chat
+          npm test  # Update if you have a different test script
+
+      # Frontend setup
+      - name: Install frontend dependencies
+        run: |
+          cd client
+          npm install
+
+      - name: Run frontend tests
+        run: |
+          cd client
+          npm test  # Update if you have a different test script
+
+      - name: Build frontend
+        run: |
+          cd client
+          npm run build
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: client/build
+
