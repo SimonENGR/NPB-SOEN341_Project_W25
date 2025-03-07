@@ -1,3 +1,4 @@
+//making changes
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -13,20 +14,20 @@ app.use(express.json()); // Ensure that the body parser is configured correctly
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',  // Change if needed
-    password: 'password',  // Add MySQL password if set
+    password: '1q2w3e4r5tMySQL',  // Add MySQL password if set
     database: 'chatapp'
 });
 
 const sessionStore = new MySQLStore({}, db);
 
 app.use(session({
-        secret: 'your-secret-key',
+        secret: 'we-do-procrastinate',//'your-secret-key'
         resave: false,
         store: sessionStore,
         saveUninitialized: false,
         cookie: { secure: false,
-                  sameSite: 'lax'
-                },
+            sameSite: 'lax'
+        },
     })
 );
 
@@ -46,33 +47,9 @@ db.connect(err => {
     console.log('Connected to MySQL database');
 });
 
-//Gets users for chat selection 
-app.get('/getUsers', authMiddleware, async (req, res) => {
-    try {
-        const [users] = await db.promise().query('SELECT id, username FROM users');
-        res.status(200).json(users);
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).send('Error fetching users');
-    }
-});
-
 // Register a new user
 app.post('/register', async (req, res) => {
     const { username, email, password, role } = req.body;
-    //Check if username already exists in the database
-    db.query('SELECT * FROM users WHERE username = ?', [username], async (err, results) =>{
-        if (err){
-            console.error('Database query error: ', err)
-            return res.status(500).send('Server error');
-        }
-        //If username already exists, send error message
-        if (results.length > 0){
-            return res.status(400).send('Username already exists');
-        }
-    })
-
-    //Hash password and add user to database if username does not already exist 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.query(
@@ -84,7 +61,6 @@ app.post('/register', async (req, res) => {
         }
     );
 });
-
 
 // Login route
 app.post('/login', async (req, res) => {
@@ -128,54 +104,28 @@ app.post('/login', async (req, res) => {
                 res.status(200).send({ message: 'Login successful', userId: user.id, username: user.username});
             });
 
-         });
+        });
     });
 });
-
-app.post('/logout', (req, res) => {
-    console.log("Before logout:", req.session);
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Error destroying session:", err);
-        return res.status(500).send("Failed to log out");
-      }
-      console.log("After logout:", req.session);
-      res.status(200).send("Logged out successfully");
-    });
-  });
 
 app.post('/addChannel', async (req, res) => {
     const {channelName, channelMembers} = req.body;
     console.log('Channel Addition attempt: ', {channelName, channelMembers});
 
-    //requires a channel name
     if(!channelName){
         return(res.status(400).send('Channel name is required.'))
     }
-
-    //requires at least 2 members to create a channel
-    if (!channelMembers || channelMembers.length === 0){
-        return res.status(400).send('At least two channel members are required.')
-    }
-
     try {
         const [existingUsers] = await db.promise().query(
             'SELECT username FROM users WHERE username IN (?)',
             [channelMembers]
         );
-        
-        console.log('Existing users in DB: ', existingUsers);
-
         const existingUsernames = existingUsers.map(user => user.username);
-
-        console.log('Existing usernames: ', existingUsernames);
 
         // Find any usernames that don’t exist
         const missingUsers = channelMembers.filter(name => !existingUsernames.includes(name));
-        console.log('Missing user: ', missingUsers);
 
         if (missingUsers.length > 0) {
-            console.log("Returning error response: User(s) not found:", missingUsers);
             return res.status(400).json({ message: `User(s) not found: ${missingUsers.join(", ")}` });
         }
 
@@ -196,15 +146,15 @@ app.get('/getUserRole', authMiddleware, async (req, res) => {
     try{
         const userId = req.session.userId;
 
-        const [rows] = await db.promise().query('SELECT role FROM users WHERE id = ?', [userId]); 
+        const [rows] = await db.promise().query('SELECT role FROM users WHERE id = ?', [userId]);
         if (rows.length > 0) {
             return res.send({ role: rows[0].role });
         }   else {
-        return res.status(404).send('User not found');
+            return res.status(404).send('User not found');
         }
     }   catch (error) {
-            return res.status(500).send('Error fetching user role');
-        }
+        return res.status(500).send('Error fetching user role');
+    }
 });
 
 app.get('/getChannels', async (req, res) => {
@@ -218,9 +168,65 @@ app.get('/getChannels', async (req, res) => {
     }
 });
 
+app.post("/sendMessage", async (req, res) => {
+    const { channelName, username, chat_content, chat_time, dm, receiver  } = req.body;
 
+    if (!dm=== undefined || !username || !chat_content || !chat_time) {//channelName and receiver couldbe empty
+        return res.status(400).json({ error: "All fields are required." });
+    }
+
+    try {
+        const query = "INSERT INTO all_chats_in_haven (channelName, username, chat_content, chat_time, dm, receiver) VALUES (?, ?, ?, ?, ?, ?)";
+        await db.promise().query(query, [channelName||null, username, chat_content, chat_time, dm?1:0, receiver||null]);
+
+        res.json({ success: true, message: "Message sent successfully!" });
+    } catch (error) {
+        console.error("Error inserting message:", error);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+// Endpoint to fetch messages for a specific channel
+app.get("/getMessages/:channelName", async (req, res) => {
+    const { channelName } = req.params;
+
+    try {
+        const query = "SELECT username, chat_content, chat_time FROM all_chats_in_haven WHERE channelName = ? ORDER BY chat_time ASC";
+        const [messages] = await db.promise().query(query, [channelName]);
+        res.json(messages);
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+app.get('/getUsername', (req, res) => {// sends usename to frontend
+    //console.log(req.session.username);
+    if (req.session.username) {
+        res.json({ username: req.session.username });  // Sends username if it exists in the session
+    } else {
+        res.status(401).json({ error: "Not logged in" });
+    }
+});
+//MODIFICATION
+app.get("/channelContent/:channelName", (req, res) => {
+    const channelName = req.params.channelName; // Get channel name from URL
+    const sql = "SELECT * FROM all_chats_in_haven WHERE channelName = ? ORDER BY chat_time DESC LIMIT 10";
+    console.log('Running the SQL query:', sql);
+    console.log('Channel Name:', channelName);
+
+    db.query(sql, [channelName], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        console.log("Backend query results:", results);
+        if (!results || results.length === 0) {
+            console.log('No results found for channel:', channelName);
+        }
+        res.json(results); // Send data to frontend
+    });
+});
+//MODIFICATION
 // Start the server
 app.listen(3001, () => {
     console.log('Server is running on port 3001');
 });
-
