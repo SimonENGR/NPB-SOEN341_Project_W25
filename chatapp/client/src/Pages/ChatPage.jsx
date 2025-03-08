@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../Styling/ChatPage.css";
+import { useNavigate } from "react-router-dom";
 
 function ChatPage() {
   const [showChannelAdd, setChannelAdd] = useState(false);
@@ -15,6 +16,8 @@ function ChatPage() {
 //modification
   const [chats, setChats] = useState([]);
   //const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
 
   useEffect(() => {
@@ -164,6 +167,18 @@ function ChatPage() {
     }
   };
 
+  //logout
+  const handleLogout = async () => {
+    console.log("Logout function triggered...");
+    try {
+      await axios.post("http://localhost:3001/logout", {}, { withCredentials: true });
+      alert("Logged out successfully!");
+      navigate("/"); // Redirect to login page
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
       <div className="chat-container">
         {/* Sidebar */}
@@ -178,6 +193,9 @@ function ChatPage() {
                   + Add Channel
                 </button>
             )}
+            <button onClick={handleLogout} className = "logout-button">
+              Logout
+            </button>
           </div>
           <div className="channels-list">
             {channels.map((channel) => (

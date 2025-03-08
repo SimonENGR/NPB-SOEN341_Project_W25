@@ -108,6 +108,18 @@ app.post('/login', async (req, res) => {
     });
 });
 
+app.post('/logout', (req, res) => {
+    console.log("Before logout:", req.session);
+    req.session.destroy((err) => {
+        if (err) {
+            console.error("Error destroying session:", err);
+            return res.status(500).send("Failed to log out");
+        }
+        console.log("After logout:", req.session);
+        res.status(200).send("Logged out successfully");
+    });
+});
+
 app.post('/addChannel', async (req, res) => {
     const {channelName, channelMembers} = req.body;
     console.log('Channel Addition attempt: ', {channelName, channelMembers});
@@ -226,7 +238,11 @@ app.get("/channelContent/:channelName", (req, res) => {
     });
 });
 //MODIFICATION
+module.exports = app;
+
 // Start the server
-app.listen(3001, () => {
-    console.log('Server is running on port 3001');
-});
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(3001, () => {
+        console.log('Server is running on port 3001');
+    });
+}
