@@ -22,7 +22,7 @@ jobs:
           node-version: 18  # Adjust to your Node.js version
           
       - name: Install dependencies
-        run: npm install --save-dev jest supertest cross-env
+        run: cd chatapp && npm install --save-dev jest supertest cross-env
 
       - name: Run tests
-        run: npm test
+        run: cd chatapp && npm test
