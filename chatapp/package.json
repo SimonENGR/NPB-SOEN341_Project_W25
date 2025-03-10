@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "main.jsx",
   "scripts": {
-    "test": "set NODE_ENV=test&& jest",
+    "test": "cross-env NODE_ENV=test jest",
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "server": "node server.js",
     "client": "cd client && npm start"
