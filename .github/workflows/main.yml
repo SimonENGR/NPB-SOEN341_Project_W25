@@ -10,7 +10,21 @@ on:
 
 jobs:
   test:
-    runs-on: windows-latest  # Run on Windows
+    runs-on: ubuntu-latest  # Use Linux for MySQL service support
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: chatapp
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=3
 
     steps:
       - name: Checkout repository
@@ -19,10 +33,32 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18  # Adjust to your Node.js version
-          
+          node-version: 18  
+
+      - name: Debug available scripts
+        run: cd chatapp && npm run  
+
+      - name: Clear npm cache
+        run: cd chatapp && npm cache clean --force
+
       - name: Install dependencies
         run: cd chatapp && npm install --save-dev jest supertest cross-env
 
+      - name: Wait for MySQL to be ready
+        run: |
+          until mysqladmin ping -h 127.0.0.1 -u root --password=password --silent; do
+            echo "Waiting for MySQL..."
+            sleep 5
+          done
+
+      - name: Run migrations (if using Sequelize)
+        run: cd chatapp && npx sequelize-cli db:migrate
+
       - name: Run tests
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: password
+          DB_NAME: chatapp
         run: cd chatapp && npm test
