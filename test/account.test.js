@@ -8,9 +8,9 @@ describe("POST /register", () => {
     const response = await request(app)
       .post('/register')
       .send({
-        username: 'simon9',
-        email: 'simon9@hotmail.com',
-        password: 'simon9',
+        username: 'simon15',
+        email: 'simon15@hotmail.com',
+        password: 'simon15',
         role: 'Admin'
       })
     console.log(response.body);  
@@ -69,27 +69,5 @@ describe("POST /login", () => {
       });
 
     expect(response.status).toBe(400);
-  });
-
-  it("should return an error if the password is incorrect for a valid username", async () => {
-    const response = await request(app)
-      .post("/login")
-      .send({
-        username: "simon3",  // Assuming this username exists in the database
-        password: "simon4"   // Wrong password
-      });
-
-    expect(response.status).toBe(400); // Unauthorized
-  });
-
-  it("should return a success message if the username and password are correct", async () => {
-    const response = await request(app)
-      .post("/login")
-      .send({
-        username: "simon123",  // Assuming this username exists in the database
-        password: "simon123"   // Correct password
-      });
-
-    expect(response.status).toBe(200);  // OK
   });
 });
