@@ -1,0 +1,31 @@
+name: Run Tests on Windows
+
+on:  
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: windows-latest  # Run on Windows
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18  # Adjust to your Node.js version
+          
+      - name: Install dependencies
+        run: npm install --save-dev jest supertest
+
+      - name: Install dependencies
+        run: npm install  # Use 'yarn install' if using Yarn
+
+      - name: Run tests
+        run: npm test
