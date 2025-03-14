@@ -122,7 +122,123 @@ app.post('/logout', (req, res) => {
     });
 });
 
-// Additional routes here...
+app.post('/addChannel', async (req, res) => {
+    const {channelName, channelMembers} = req.body;
+    console.log('Channel Addition attempt: ', {channelName, channelMembers});
+
+    if(!channelName){
+        return(res.status(400).send('Channel name is required.'))
+    }
+    try {
+        const [existingUsers] = await db.promise().query(
+            'SELECT username FROM users WHERE username IN (?)',
+            [channelMembers]
+        );
+        const existingUsernames = existingUsers.map(user => user.username);
+
+        // Find any usernames that don’t exist
+        const missingUsers = channelMembers.filter(name => !existingUsernames.includes(name));
+
+        if (missingUsers.length > 0) {
+            return res.status(400).json({ message: `User(s) not found: ${missingUsers.join(", ")}` });
+        }
+
+        // Insert the channel into the database
+        await db.promise().query(
+            'INSERT INTO channels (channelName, channelMembers) VALUES (?, ?)',
+            [channelName, JSON.stringify(existingUsernames)]
+        );
+
+        return res.send({ message: "Channel created successfully.", channelName, channelMembers: existingUsernames });
+
+    } catch (error) {
+        return res.status(500).send({ message: 'Error creating channel', error: error.message });
+    }
+});
+
+app.get('/getUserRole', authMiddleware, async (req, res) => {
+    try{
+        const userId = req.session.userId;
+
+        const [rows] = await db.promise().query('SELECT role FROM users WHERE id = ?', [userId]);
+        if (rows.length > 0) {
+            return res.send({ role: rows[0].role });
+        }   else {
+            return res.status(404).send('User not found');
+        }
+    }   catch (error) {
+        return res.status(500).send('Error fetching user role');
+    }
+});
+
+app.get('/getChannels', async (req, res) => {
+    try{
+        const username = req.session.username;
+
+        const [channels] = await db.promise().query('SELECT * FROM channels WHERE JSON_CONTAINS(channelMembers, ?)',[JSON.stringify(username)]);
+        return res.send(channels);
+    } catch (error) {
+        return res.status(500).send('Error fetching channels');
+    }
+});
+
+app.post("/sendMessage", async (req, res) => {
+    const { channelName, username, chat_content, chat_time, dm, receiver  } = req.body;
+
+    if (!dm=== undefined || !username || !chat_content || !chat_time) {//channelName and receiver couldbe empty
+        return res.status(400).json({ error: "All fields are required." });
+    }
+
+    try {
+        const query = "INSERT INTO all_chats_in_haven (channelName, username, chat_content, chat_time, dm, receiver) VALUES (?, ?, ?, ?, ?, ?)";
+        await db.promise().query(query, [channelName||null, username, chat_content, chat_time, dm?1:0, receiver||null]);
+
+        res.json({ success: true, message: "Message sent successfully!" });
+    } catch (error) {
+        console.error("Error inserting message:", error);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+
+// Endpoint to fetch messages for a specific channel
+app.get("/getMessages/:channelName", async (req, res) => {
+    const { channelName } = req.params;
+
+    try {
+        const query = "SELECT username, chat_content, chat_time FROM all_chats_in_haven WHERE channelName = ? ORDER BY chat_time ASC";
+        const [messages] = await db.promise().query(query, [channelName]);
+        res.json(messages);
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        res.status(500).json({ error: "Database error" });
+    }
+});
+app.get('/getUsername', (req, res) => {// sends usename to frontend database gets the right username
+    //console.log(req.session.username);
+    if (req.session.username) {
+        res.json({ username: req.session.username });  // Sends username if it exists in the session
+    } else {
+        res.status(401).json({ error: "Not logged in" });
+    }
+});
+
+app.get("/channelContent/:channelName", (req, res) => {
+    const channelName = req.params.channelName; // Get channel name from URL
+    const sql = "SELECT * FROM all_chats_in_haven WHERE channelName = ? ORDER BY chat_time DESC LIMIT 10";
+    console.log('Running the SQL query:', sql);
+    console.log('Channel Name:', channelName);
+
+    db.query(sql, [channelName], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        console.log("Backend query results:", results);
+        if (!results || results.length === 0) {
+            console.log('No results found for channel:', channelName);
+        }
+        res.json(results); // Send data to frontend
+    });
+});
 
 // Start the server
 if (process.env.NODE_ENV !== 'test') {
