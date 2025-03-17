@@ -7,9 +7,9 @@ describe("POST /register", () => {
         const response = await request(app)
             .post('/register')
             .send({
-                username: 'simon13',
-                email: 'simon13@hotmail.com',
-                password: 'simon13',
+                username: 'abc123',
+                email: 'abc123@hotmail.com',
+                password: 'abc123',
                 role: 'Admin'
             })
         console.log(response.body);
@@ -84,8 +84,8 @@ describe("POST /login", () => {
         const response = await request(app)
             .post("/login")
             .send({
-                username: "a",  // Assuming this username exists in the database
-                password: "a"   // Correct password
+                username: "abc123",  // Assuming this username exists in the database
+                password: "abc123"   // Correct password
             });
 
         expect(response.status).toBe(200);  // OK
