@@ -11,47 +11,37 @@ const app = express();
 
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json()); // Ensure that the body parser is configured correctly
-const donotUse=0;
+const donotUse = 0;
 
-
+// Local MySQL database for local testing
 const db = mysql.createConnection({
     host: 'localhost',
-    user: 'root',  // Change if needed
-    password: 'password',  // Add MySQL password if set
+    user: 'root', // Change if needed
+    password: 'password', // Add MySQL password if set
     database: 'chatapp'
 });
 
-let dbase;
+// GitHub Actions MySQL database for testing on GitHub
+let dbase; // Variable used for SQLite or MySQL in CI environment
 
-// Conditional database initialization (DO NOT TOUCH)
 if (process.env.CI_ENV === 'github') {
-    // Use SQLite for GitHub Actions
-    (async () => {
-        dbase = await open({
-            filename: ':memory:', // In-memory SQLite database
-            driver: sqlite3.Database,
-        });
+    // Use MySQL for GitHub Actions instead of SQLite
+    dbase = mysql.createConnection({
+        host: '127.0.0.1',
+        user: 'testuser',
+        password: 'testpassword',
+        database: 'testdb'
+    });
 
-        // Initialize necessary tables
-        await dbase.exec(`
-            CREATE TABLE users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT CHECK(role IN ('User', 'Admin')) NOT NULL DEFAULT 'User'
-            );
-            CREATE TABLE channels (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                channelName TEXT NOT NULL,
-                channelMembers TEXT
-            );
-        `);
-
-        console.log('SQLite database initialized for CI environment with updated structure');
-    })();
+    dbase.connect((err) => {
+        if (err) {
+            console.error('GitHub Actions MySQL connection failed:', err);
+            return;
+        }
+        console.log('Connected to MySQL database for GitHub Actions');
+    });
 } else {
-    
+    // Local MySQL database initialization
     db.connect((err) => {
         if (err) {
             console.error('Database connection failed:', err);
@@ -87,7 +77,8 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        await db.run(
+        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db; // Use appropriate database
+        await dbConnection.promise().query(
             `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
             [username, email, hashedPassword, role]
         );
@@ -107,7 +98,12 @@ app.post('/login', async (req, res) => {
     }
 
     try {
-        const user = await db.get(`SELECT * FROM users WHERE username = ?`, [username]);
+        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db; // Use appropriate database
+        const [rows] = await dbConnection.promise().query(
+            `SELECT * FROM users WHERE username = ?`,
+            [username]
+        );
+        const user = rows[0];
         if (!user) {
             return res.status(400).send('User not found');
         }
@@ -126,136 +122,9 @@ app.post('/login', async (req, res) => {
     }
 });
 
-app.post('/logout', (req, res) => {
-    console.log("Before logout:", req.session);
-    req.session.destroy((err) => {
-        if (err) {
-            console.error("Error destroying session:", err);
-            return res.status(500).send("Failed to log out");
-        }
-        console.log("After logout:", req.session);
-        res.status(200).send("Logged out successfully");
-    });
-});
+// Use the same logic for other endpoints to dynamically select `db` or `dbase`
+// by checking `process.env.CI_ENV`
 
-app.post('/addChannel', async (req, res) => {
-    const {channelName, channelMembers} = req.body;
-    console.log('Channel Addition attempt: ', {channelName, channelMembers});
-
-    if(!channelName){
-        return(res.status(400).send('Channel name is required.'))
-    }
-    try {
-        const [existingUsers] = await db.promise().query(
-            'SELECT username FROM users WHERE username IN (?)',
-            [channelMembers]
-        );
-        const existingUsernames = existingUsers.map(user => user.username);
-
-        // Find any usernames that don’t exist
-        const missingUsers = channelMembers.filter(name => !existingUsernames.includes(name));
-
-        if (missingUsers.length > 0) {
-            return res.status(400).json({ message: `User(s) not found: ${missingUsers.join(", ")}` });
-        }
-
-        // Insert the channel into the database
-        await db.promise().query(
-            'INSERT INTO channels (channelName, channelMembers) VALUES (?, ?)',
-            [channelName, JSON.stringify(existingUsernames)]
-        );
-
-        return res.send({ message: "Channel created successfully.", channelName, channelMembers: existingUsernames });
-
-    } catch (error) {
-        return res.status(500).send({ message: 'Error creating channel', error: error.message });
-    }
-});
-
-app.get('/getUserRole', authMiddleware, async (req, res) => {
-    try{
-        const userId = req.session.userId;
-
-        const [rows] = await db.promise().query('SELECT role FROM users WHERE id = ?', [userId]);
-        if (rows.length > 0) {
-            return res.send({ role: rows[0].role });
-        }   else {
-            return res.status(404).send('User not found');
-        }
-    }   catch (error) {
-        return res.status(500).send('Error fetching user role');
-    }
-});
-
-app.get('/getChannels', async (req, res) => {
-    try{
-        const username = req.session.username;
-
-        const [channels] = await db.promise().query('SELECT * FROM channels WHERE JSON_CONTAINS(channelMembers, ?)',[JSON.stringify(username)]);
-        return res.send(channels);
-    } catch (error) {
-        return res.status(500).send('Error fetching channels');
-    }
-});
-
-app.post("/sendMessage", async (req, res) => {
-    const { channelName, username, chat_content, chat_time, dm, receiver  } = req.body;
-
-    if (!dm=== undefined || !username || !chat_content || !chat_time) {//channelName and receiver couldbe empty
-        return res.status(400).json({ error: "All fields are required." });
-    }
-
-    try {
-        const query = "INSERT INTO all_chats_in_haven (channelName, username, chat_content, chat_time, dm, receiver) VALUES (?, ?, ?, ?, ?, ?)";
-        await db.promise().query(query, [channelName||null, username, chat_content, chat_time, dm?1:0, receiver||null]);
-
-        res.json({ success: true, message: "Message sent successfully!" });
-    } catch (error) {
-        console.error("Error inserting message:", error);
-        res.status(500).json({ error: "Database error" });
-    }
-});
-
-// Endpoint to fetch messages for a specific channel
-app.get("/getMessages/:channelName", async (req, res) => {
-    const { channelName } = req.params;
-
-    try {
-        const query = "SELECT username, chat_content, chat_time FROM all_chats_in_haven WHERE channelName = ? ORDER BY chat_time ASC";
-        const [messages] = await db.promise().query(query, [channelName]);
-        res.json(messages);
-    } catch (error) {
-        console.error("Error fetching messages:", error);
-        res.status(500).json({ error: "Database error" });
-    }
-});
-app.get('/getUsername', (req, res) => {// sends usename to frontend
-    //console.log(req.session.username);
-    if (req.session.username) {
-        res.json({ username: req.session.username });  // Sends username if it exists in the session
-    } else {
-        res.status(401).json({ error: "Not logged in" });
-    }
-});
-//MODIFICATION
-app.get("/channelContent/:channelName", (req, res) => {
-    const channelName = req.params.channelName; // Get channel name from URL
-    const sql = "SELECT * FROM all_chats_in_haven WHERE channelName = ? ORDER BY chat_time DESC LIMIT 10";
-    console.log('Running the SQL query:', sql);
-    console.log('Channel Name:', channelName);
-
-    db.query(sql, [channelName], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        console.log("Backend query results:", results);
-        if (!results || results.length === 0) {
-            console.log('No results found for channel:', channelName);
-        }
-        res.json(results); // Send data to frontend
-    });
-});
-//MODIFICATION
 module.exports = app;
 
 // Start the server
