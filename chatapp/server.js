@@ -113,6 +113,7 @@ app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
+        console.log("Missing username or password");
         return res.status(400).send('Username and password are required');
     }
 
