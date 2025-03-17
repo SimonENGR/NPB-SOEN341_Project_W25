@@ -27,13 +27,18 @@ jobs:
           cd chatapp
           npm install
 
-      - name: Set environment variable for CI
-        run: echo "CI_ENV=github" >> $GITHUB_ENV
+      - name: Rebuild native modules for Linux
+        run: |
+          cd chatapp
+          npm rebuild sqlite3
+
+      - name: Fix permissions for Jest and cross-env
+        run: |
+          cd chatapp
+          chmod +x ./node_modules/.bin/cross-env
+          chmod +x ./node_modules/.bin/jest
 
       - name: Run tests
         run: |
           cd chatapp
-          chmod +x ./node_modules/.bin/cross-env 
-          chmod +x ./node_modules/.bin/jest     
           npm test
-
