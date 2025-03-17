@@ -20,9 +20,9 @@ jobs:
           - 3306:3306
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: testdb
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: testpassword
+          MYSQL_DATABASE: chatapp
+          MYSQL_USER: root
+          MYSQL_PASSWORD: password
 
     steps:
       - name: Checkout repository
@@ -51,6 +51,11 @@ jobs:
           cd chatapp
           chmod +x ./node_modules/.bin/cross-env
           chmod +x ./node_modules/.bin/jest
+
+      - name: Verify MySQL Setup
+        run: |
+          sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -u testuser -ptestpassword -e "SHOW DATABASES;"
 
       - name: Run tests
         run: |

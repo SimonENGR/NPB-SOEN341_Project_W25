@@ -28,17 +28,24 @@ if (process.env.CI_ENV === 'github') {
     // Use MySQL for GitHub Actions instead of SQLite
     dbase = mysql.createConnection({
         host: '127.0.0.1',
-        user: 'testuser',
-        password: 'testpassword',
-        database: 'testdb'
+        user: 'root',
+        password: 'password',
+        database: 'chatapp'
     });
 
     dbase.connect((err) => {
         if (err) {
-            console.error('GitHub Actions MySQL connection failed:', err);
+            console.error("GitHub MySQL connection failed:", err);
             return;
         }
-        console.log('Connected to MySQL database for GitHub Actions');
+        console.log("GitHub MySQL connection successful!");
+        dbase.query("SHOW TABLES;", (err, results) => {
+            if (err) {
+                console.error("Error listing tables:", err);
+            } else {
+                console.log("Tables in database:", results);
+            }
+        });
     });
 } else {
     // Local MySQL database initialization
