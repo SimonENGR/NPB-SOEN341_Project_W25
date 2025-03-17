@@ -31,7 +31,7 @@ jobs:
         run: |
           cd chatapp
           chmod +x ./node_modules/.bin/node-pre-gyp
-          npm install bcrypt --build-from-source
+          npm install --build-from-source bcrypt
           npm rebuild sqlite3
 
       - name: Fix permissions for Jest and cross-env
