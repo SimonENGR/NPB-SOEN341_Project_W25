@@ -81,20 +81,28 @@ const authMiddleware = (req, res, next) => {
 // Register a new user
 app.post('/register', async (req, res) => {
     const { username, email, password, role } = req.body;
+    console.log("Register route hit with data:", { username, email, password, role });
+
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("Password hashed successfully");
 
     try {
         const dbConnection = process.env.CI_ENV === 'github' ? dbase : db; // Use appropriate database
+        console.log("Using database connection:", process.env.CI_ENV === 'github' ? "dbase" : "db");
+
         await dbConnection.promise().query(
             `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
             [username, email, hashedPassword, role]
         );
+        console.log("User inserted into database");
+
         res.status(201).send('User registered');
     } catch (err) {
-        console.error(err);
+        console.error("Error in /register route:", err);
         res.status(500).send(err.message);
     }
 });
+
 
 // Login route
 app.post('/login', async (req, res) => {

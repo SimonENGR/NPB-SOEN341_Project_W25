@@ -16,6 +16,8 @@ describe("POST /register", () => {
     it("should create a new account with valid data", async () => {
         const { username, email, password } = getNextTestUser();
     
+        console.log("Test running with data:", { username, email, password });
+    
         const response = await request(app)
             .post('/register')
             .send({
@@ -25,9 +27,10 @@ describe("POST /register", () => {
                 role: 'Admin'
             });
     
-        console.log(response.body);
-        expect(response.status).toBe(201); // Expecting 201 for successful creation
+        console.log("Test response:", response.body);
+        expect(response.status).toBe(201);
     });
+    
 
     it("should return an error if the username is missing", async () => {
         const response = await request(app)
