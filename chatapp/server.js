@@ -111,43 +111,35 @@ app.post('/register', async (req, res) => {
 // Login route
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    console.log("Login attempt:", { username, password });
 
     if (!username || !password) {
-        console.log("Missing username or password");
         return res.status(400).send('Username and password are required');
     }
 
     try {
-        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db;
+        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db; // Use appropriate database
         const [rows] = await dbConnection.promise().query(
             `SELECT * FROM users WHERE username = ?`,
             [username]
         );
-        console.log("User fetched from database:", rows);
-
-        if (rows.length === 0) {
-            console.log("User not found");
+        const user = rows[0];
+        if (!user) {
             return res.status(400).send('User not found');
         }
 
-        const user = rows[0];
         const isMatch = await bcrypt.compare(password, user.password);
-        console.log("Password match result:", isMatch);
-
         if (!isMatch) {
             return res.status(400).send('Username or password is incorrect');
         }
 
         req.session.userId = user.id;
         req.session.username = user.username;
-        return res.status(200).send({ message: 'Login successful', userId: user.id, username: user.username });
+        res.status(200).send({ message: 'Login successful', userId: user.id, username: user.username });
     } catch (err) {
-        console.error("Error in /login route:", err);
+        console.error(err);
         res.status(500).send('Server error');
     }
 });
-
 
 // Use the same logic for other endpoints to dynamically select `db` or `dbase`
 // by checking `process.env.CI_ENV`
