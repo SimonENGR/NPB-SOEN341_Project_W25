@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - cicdtesting  # Add your branch here
   pull_request:
     branches:
       - main
