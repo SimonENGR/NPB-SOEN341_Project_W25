@@ -1,5 +1,6 @@
 const app = require('./server.js');
 const request = require('supertest');
+const dbConnection = process.env.CI_ENV === 'github' ? dbase : db;
 
 let userCounter = 124; // Start with 123 as the base number
 
