@@ -74,20 +74,6 @@ describe("POST /register", () => {
 // Login tests
 describe("POST /login", () => {
 
-    beforeAll(async () => {
-        const { username, email, password } = getNextTestUser();
-        const hashedPassword = await bcrypt.hash(password, 10);
-    
-        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db;
-        await dbConnection.promise().query(
-            `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
-            [username, email, hashedPassword, 'Admin']
-        );
-    
-        const [rows] = await dbConnection.promise().query("SELECT * FROM users");
-        console.log("Current users in database:", rows);
-    });
-    
 
     it("should return an error if the username is missing", async () => {
         const response = await request(app)
