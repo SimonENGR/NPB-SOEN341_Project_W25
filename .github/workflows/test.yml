@@ -33,5 +33,6 @@ jobs:
       - name: Run tests
         run: |
           cd chatapp
+          chmod +x ./node_modules/.bin/jest
           npm test
 
