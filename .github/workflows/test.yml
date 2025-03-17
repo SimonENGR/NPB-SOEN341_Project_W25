@@ -27,9 +27,10 @@ jobs:
           cd chatapp
           npm install
 
-      - name: Rebuild native modules for Linux
+      - name: Rebuild native modules
         run: |
           cd chatapp
+          npm rebuild bcrypt
           npm rebuild sqlite3
 
       - name: Fix permissions for Jest and cross-env
