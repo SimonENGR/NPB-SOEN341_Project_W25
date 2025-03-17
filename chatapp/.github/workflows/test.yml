@@ -1,0 +1,31 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.14.0  # Using the version you're running locally
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set environment variable for CI
+        run: echo "CI_ENV=github" >> $GITHUB_ENV
+
+      - name: Run tests
+        run: npm test
