@@ -87,8 +87,11 @@ app.post('/register', async (req, res) => {
     console.log("Password hashed successfully");
 
     try {
-        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db; // Use appropriate database
-        console.log("Using database connection:", process.env.CI_ENV === 'github' ? "dbase" : "db");
+        // Correctly switch between db and dbase
+        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db;
+        console.log("Environment CI_ENV:", process.env.CI_ENV);
+        console.log("Database connection in use:", process.env.CI_ENV === 'github' ? "dbase" : "db");
+
 
         await dbConnection.promise().query(
             `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
@@ -102,6 +105,7 @@ app.post('/register', async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
 
 
 // Login route

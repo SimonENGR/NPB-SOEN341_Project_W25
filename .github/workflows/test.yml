@@ -12,6 +12,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      CI_ENV: github
 
     services:
       mysql:
@@ -51,6 +53,11 @@ jobs:
           cd chatapp
           chmod +x ./node_modules/.bin/cross-env
           chmod +x ./node_modules/.bin/jest
+
+      - name: Initialize Database and User
+        run: |
+          sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -u root -proot < SETUP.sql
 
       - name: Verify MySQL Setup
         run: |
