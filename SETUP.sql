@@ -1,5 +1,4 @@
 CREATE DATABASE IF NOT EXISTS chatapp;
-CREATE USER IF NOT EXISTS 'user'@'%' IDENTIFIED BY 'password';
+CREATE USER IF NOT EXISTS 'user'@'%' IDENTIFIED WITH mysql_native_password BY 'password';
 GRANT ALL PRIVILEGES ON chatapp.* TO 'user'@'%';
-GRANT ALL PRIVILEGES ON chatapp.* TO 'user'@'%' IDENTIFIED BY 'password';
 FLUSH PRIVILEGES;
