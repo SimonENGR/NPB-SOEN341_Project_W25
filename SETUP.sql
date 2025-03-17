@@ -1,4 +1,18 @@
 CREATE DATABASE IF NOT EXISTS chatapp;
+USE chatapp;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('User', 'Admin') NOT NULL DEFAULT 'User'
+);
+CREATE TABLE IF NOT EXISTS channels (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    channelName VARCHAR(255) NOT NULL,
+    channelMembers JSON
+);
 CREATE USER IF NOT EXISTS 'user'@'%' IDENTIFIED WITH mysql_native_password BY 'password';
 GRANT ALL PRIVILEGES ON chatapp.* TO 'user'@'%';
 FLUSH PRIVILEGES;
