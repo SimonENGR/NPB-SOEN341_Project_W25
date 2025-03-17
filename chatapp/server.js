@@ -28,7 +28,7 @@ if (process.env.CI_ENV === 'github') {
     // Use MySQL for GitHub Actions instead of SQLite
     dbase = mysql.createConnection({
         host: '127.0.0.1',
-        user: 'root',
+        user: 'user',
         password: 'password',
         database: 'chatapp'
     });
