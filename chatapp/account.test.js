@@ -1,19 +1,32 @@
 const app = require('./server.js');
 const request = require('supertest');
 
+let userCounter = 124; // Start with 123 as the base number
+
+const getNextTestUser = () => {
+    const username = `abc${userCounter}`;
+    const email = `abc${userCounter}@hotmail.com`;
+    const password = `abc${userCounter}`;
+    userCounter++; // Increment the counter for the next test
+    return { username, email, password };
+};
+
 describe("POST /register", () => {
 
     it("should create a new account with valid data", async () => {
+        const { username, email, password } = getNextTestUser();
+    
         const response = await request(app)
             .post('/register')
             .send({
-                username: 'abc123',
-                email: 'abc123@hotmail.com',
-                password: 'abc123',
+                username,
+                email,
+                password,
                 role: 'Admin'
-            })
+            });
+    
         console.log(response.body);
-        expect(response.status).toBe(201);  // Expecting 201 for successful creation
+        expect(response.status).toBe(201); // Expecting 201 for successful creation
     });
 
     it("should return an error if the username is missing", async () => {
