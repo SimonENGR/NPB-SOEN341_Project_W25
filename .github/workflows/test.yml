@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - cicdtesting  # Add your branch here
+      - cicdtesting
   pull_request:
     branches:
       - main
@@ -20,13 +20,18 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: 22.14.0  # Using the version you're running locally
+          node-version: 22.14.0
 
-      - name: Install dependencies
-        run: npm install
+      - name: Navigate to chatapp and install dependencies
+        run: |
+          cd chatapp
+          npm install
 
       - name: Set environment variable for CI
         run: echo "CI_ENV=github" >> $GITHUB_ENV
 
       - name: Run tests
-        run: npm test
+        run: |
+          cd chatapp
+          npm test
+
