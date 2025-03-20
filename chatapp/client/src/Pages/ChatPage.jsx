@@ -11,66 +11,71 @@ function ChatPage() {
   const [userRole, setUserRole] = useState("");
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [newMessage, setNewMessage] = useState("");
-  //const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState('You');
-//modification
   const [chats, setChats] = useState([]);
-  //const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
-
+  // Fetch channel messages when a channel is selected
   useEffect(() => {
-    if (!channelName) return;
+    if (!selectedChannel) return;
 
+    // Initial fetch
+    fetchChannelMessages(selectedChannel.channelName);
+    
+    // Set up polling
     const interval = setInterval(() => {
-      axios.get(`http://localhost:3001/channelContent/${channelName}`)
-          .then((response) => {
-            const reversedChats = response.data.reverse().map(msg => ({
-              ...msg,
-              chat_time: new Date(msg.chat_time).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }), // Convert chat_time to ezy to read format
-            }));
-
-            setChats(reversedChats);
-          })
-          .catch((error) => {
-            console.error("Error fetching chats:", error);
-          });
-    }, 1000);
+      fetchChannelMessages(selectedChannel.channelName);
+    }, 2000);
 
     return () => clearInterval(interval);
+  }, [selectedChannel]);
 
-  }, [channelName]);
+  // Function to fetch channel messages
+const fetchChannelMessages = async (channelName) => {
+  try {
+    const response = await axios.get(`http://localhost:3001/getMessages/${channelName}`, {
+      withCredentials: true  // Add this line to ensure credentials are sent
+    });
+    
+    // Format the messages for display
+    const formattedMessages = response.data.map(msg => ({
+      ...msg,
+      chat_time: new Date(msg.chat_time).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    }));
+    
+    console.log("Fetched messages:", formattedMessages); // Debug log to check what's being returned
+    setChats(formattedMessages);
+  } catch (error) {
+    console.error("Error fetching channel messages:", error);
+  }
+};
 
-//modification
+  // Fetch username on component mount
   useEffect(() => {
     async function fetchUsername() {
       try {
-        // Make a GET request to the backend to get the username
-        const response = await fetch('http://localhost:3001/getUsername',{
-          method: 'GET',
-          credentials: 'include',
+        const response = await axios.get('http://localhost:3001/getUsername', {
+          withCredentials: true
         });
-        const data = await response.json();
-        console.log(data);
-
-        // If the backend returns a username, update the state
-        if (data.username) {
-          setUsername(data.username);
+        
+        if (response.data.username) {
+          setUsername(response.data.username);
         } else {
-          setUsername('Guest'); // defaults to "Guest" if no username
+          setUsername('Guest');
         }
       } catch (error) {
         console.error('Error fetching username:', error);
-        setUsername('Guest'); // Fallback if there's an error
+        setUsername('Guest');
       }
     }
-    fetchUsername(); // Call the function on component mount
+    fetchUsername();
   }, []);
 
+  // Fetch user role and available channels
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -93,204 +98,261 @@ function ChatPage() {
   }, []);
 
   const handleChannelClick = (channel) => {
-    setChannelName(channel.channelName);
     setSelectedChannel(channel);
-    //setMessages([]);
-
   };
 
   const handleChannelMessage = async () => {
-    if (newMessage.trim() !== "") {
-      const timestamp = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const newChatMessage = {
-        username: username,
-        chat_content: newMessage,
-        chat_time: timestamp,
-      };
-
-
-      const timestampDB = new Date().toLocaleString("en-US", {
-        timeZone: "America/New_York",}).replace(",", "");
-      try {
-        const response = await fetch("http://localhost:3001/sendMessage", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({
-            channelName: selectedChannel.channelName,
-            username: username,
-            chat_content: newMessage,
-            chat_time: timestampDB,
-            dm: 0,//"0" indicates false
-            receiver: null
-          }),
-        });
-
-        const data = await response.json();
-        if (data.success) {
-          // Append the new message to chats immediately
-          setChats((prevChats) => [...prevChats, newChatMessage]);
-
-          // Clear input field
-          setNewMessage("");
-        }
-      } catch (error) {
-        console.error("Error sending message:", error);
-      }
-    }
-  };
-
-
-  const handleChannelAdd = async (e) => {
-    e.preventDefault();
+    if (newMessage.trim() === "" || !selectedChannel) return;
+    
+    const currentTime = new Date();
+    // Format for display
+    const displayTime = currentTime.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    
+    // Format for database (using ISO format for consistency)
+    const dbTime = currentTime.toISOString();
+    
     try {
       const response = await axios.post(
-        "http://localhost:3001/addChannel",
+        "http://localhost:3001/sendMessage", 
         {
-          channelName,
-          channelMembers: channelMembers
-            .split(",")
-            .map((member) => member.trim()),
+          channelName: selectedChannel.channelName,
+          username: username,
+          chat_content: newMessage,
+          chat_time: dbTime,
+          dm: 0,
+          receiver: null
         },
         { withCredentials: true }
       );
+
+      if (response.data.success) {
+        // Optimistically add message to UI
+        const newChatMessage = {
+          username: username,
+          chat_content: newMessage,
+          chat_time: displayTime
+        };
+        
+        setChats(prevChats => [...prevChats, newChatMessage]);
+        setNewMessage("");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
+
+  const handleChannelAdd = async (e) => {
+    e.preventDefault();
+    
+    if (!channelName.trim()) {
+      alert("Please enter a channel name");
+      return;
+    }
+    
+    try {
+      // Make sure to include the current user in the channel members
+      let membersList = channelMembers
+        .split(",")
+        .map(member => member.trim())
+        .filter(member => member);
+      
+      // Add current user if not already in the list
+      if (!membersList.includes(username)) {
+        membersList.push(username);
+      }
+      
+      const response = await axios.post(
+        "http://localhost:3001/addChannel",
+        {
+          channelName: channelName.trim(),
+          channelMembers: membersList
+        },
+        { withCredentials: true }
+      );
+      
       alert(response.data.message || "Channel created successfully!");
 
-      setChannels((prevChannels) => [...prevChannels, response.data]);
+      // Refresh the channels list
+      const channelsResponse = await axios.get(
+        "http://localhost:3001/getChannels",
+        { withCredentials: true }
+      );
+      setChannels(channelsResponse.data);
+      
+      // Reset form
       setChannelName("");
       setChannelMembers("");
       setChannelAdd(false);
     } catch (error) {
       console.error("Error creating channel:", error);
+      alert("Error creating channel: " + (error.response?.data?.message || error.message));
     }
   };
 
-  //logout
   const handleLogout = async () => {
-    console.log("Logout function triggered...");
     try {
       await axios.post("http://localhost:3001/logout", {}, { withCredentials: true });
       alert("Logged out successfully!");
-      navigate("/"); // Redirect to login page
+      navigate("/");
     } catch (error) {
       console.error("Error logging out:", error);
     }
   };
 
+  const goToDMs = () => {
+    navigate("/dm");
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleChannelMessage();
+    }
+  };
+
   return (
-      <div className="chat-container">
+    <div className="app-container">
+      {/* Top Navigation Bar */}
+      <header className="top-navbar">
+        <div className="brand-container">
+          <h1 className="app-brand">ChatHaven</h1>
+        </div>
+        <div className="nav-links">
+          <button className="nav-link active">Channels</button>
+          <button className="nav-link" onClick={goToDMs}>Messages</button>
+          {userRole === "Admin" && (
+            <button 
+              onClick={() => setChannelAdd(true)} 
+              className="nav-link add-channel"
+            >
+              Add Channel
+            </button>
+          )}
+        </div>
+        <div className="user-controls">
+          <span className="current-user">{username}</span>
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <div className="main-content">
         {/* Sidebar */}
         <div className="sidebar">
-          <div className="sidebar-header">
-            <h2>ChatHaven</h2>
-            {userRole === "Admin" && (
-                <button
-                    onClick={() => setChannelAdd(true)}
-                    className="add-channel-button"
+          <div className="channels-section">
+            <div className="section-header">
+              <h3>Channels</h3>
+            </div>
+            <div className="channels-list">
+              {channels.map((channel) => (
+                <div
+                  key={channel.id}
+                  className={`list-item ${
+                    selectedChannel?.id === channel.id ? "active" : ""
+                  }`}
+                  onClick={() => handleChannelClick(channel)}
                 >
-                  + Add Channel
-                </button>
-            )}
-            <button onClick={handleLogout} className = "logout-button">
-              Logout
-            </button>
+                  <span className="item-icon">#</span>
+                  <span className="item-name">{channel.channelName}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="channels-list">
-            {channels.map((channel) => (
-                <button
-                    key={channel.id}
-                    className={`channel-button ${
-                        selectedChannel?.id === channel.id ? "active" : ""
-                    }`}
-                    onClick={() => handleChannelClick(channel)}
-                >
-                  <span className="channel-name">{channel.channelName}</span>
-                </button>
-            ))}
-          </div>
-          {showChannelAdd && (
-              <div className="create-channel-modal">
-                <form className="create-channel-form" onSubmit={handleChannelAdd}>
-                  <input
-                      type="text"
-                      placeholder="Channel Name"
-                      value={channelName}
-                      onChange={(e) => setChannelName(e.target.value)}
-                      required
-                  />
-                  <input
-                      type="text"
-                      placeholder="Channel Members (comma-separated)"
-                      value={channelMembers}
-                      onChange={(e) => setChannelMembers(e.target.value)}
-                      required
-                  />
-                  <button type="submit">Create</button>
-                  <button type="button" onClick={() => setChannelAdd(false)}>
-                    Cancel
-                  </button>
-                </form>
-              </div>
-          )}
         </div>
 
         {/* Chat Box */}
         <div className="chat-box">
           {selectedChannel ? (
-              <>
-                <div className="chat-header">
-                  <h3>{selectedChannel.channelName}</h3>
-                </div>
-                {/*<div className="messages">*/}
-                {/*  {messages.map((msg, index) => (*/}
-                {/*      <div*/}
-                {/*          key={index}*/}
-                {/*          className={`message ${msg.sender === "You" ? "user" : "other"}`}*/}
-                {/*      >*/}
-                {/*        <span className="message-sender">{msg.username}:</span>*/}
-                {/*        <span className="message-text">{msg.text}</span>*/}
-                {/*        <span className="message-timestamp">{msg.timestamp}</span>*/}
-                {/*      </div>*/}
-                {/*  ))}*/}
-                {/*</div>*/}
-                <div className="messages">
-                  {chats.length > 0 ? (
-                      chats.map((msg, index) => (
-                          <div
-                              key={index}
-                              className={`message ${msg.username === username ? "user" : "other"}`}
-                          >
-                            <span className="message-sender">{msg.username}:</span>
-                            <span className="message-text">{msg.chat_content}</span>
-                            <span className="message-timestamp">{msg.chat_time}</span>
-                          </div>
-                      ))
-                  ) : (
-                      <p>No messages yet.</p>
-                  )}
-                </div>
-                <div className="message-input">
-                  <input
-                      type="text"
-                      placeholder="Type a message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                  />
-                  <button className="send-button" onClick={handleChannelMessage}>
-                    Send
-                  </button>
-                </div>
-              </>
-          ) : (
-              <div className="placeholder">
-                <h2>Select a Channel</h2>
-                <p>Pick a channel from the left to start chatting.</p>
+            <>
+              <div className="chat-header">
+                <h3><span className="header-icon">#</span> {selectedChannel.channelName}</h3>
               </div>
+              <div className="messages-container">
+                {chats.length > 0 ? (
+                  chats.map((msg, index) => (
+                    <div
+                      key={index}
+                      className={`message ${msg.username === username ? "user-message" : "other-message"}`}
+                    >
+                      <div className="message-header">
+                        <span className="message-sender">{msg.username}</span>
+                        <span className="message-time">{msg.chat_time}</span>
+                      </div>
+                      <div className="message-body">
+                        {msg.chat_content}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <p>No messages in this channel yet.</p>
+                    <p>Be the first to send a message!</p>
+                  </div>
+                )}
+              </div>
+              <div className="input-container">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+                <button className="send-button" onClick={handleChannelMessage}>
+                  Send
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="empty-state welcome">
+              <h2>Welcome to Channels</h2>
+              <p>Select a channel from the left sidebar to start chatting.</p>
+              <p>Use the Messages button in the top navigation to chat privately with other users.</p>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Modal for adding channels */}
+      {showChannelAdd && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <form className="form" onSubmit={handleChannelAdd}>
+              <h3>Create New Channel</h3>
+              <div className="form-group">
+                <label>Channel Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter channel name"
+                  value={channelName}
+                  onChange={(e) => setChannelName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Members</label>
+                <input
+                  type="text"
+                  placeholder="Enter usernames (comma-separated)"
+                  value={channelMembers}
+                  onChange={(e) => setChannelMembers(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-buttons">
+                <button type="submit" className="primary-button">Create</button>
+                <button type="button" className="secondary-button" onClick={() => setChannelAdd(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
