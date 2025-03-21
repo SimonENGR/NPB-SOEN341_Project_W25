@@ -17,7 +17,7 @@ require("dotenv").config({
   const db = mysql.createConnection({
       host: process.env.DB_HOST || 'localhost',  // Use environment variable or default to localhost
       user: process.env.DB_USER || 'root',      // Use environment variable or default to 'root'
-      password: process.env.DB_PASSWORD || 'password',  // Use environment variable or default to 'password'
+      password: process.env.DB_PASSWORD || '1q2w3e4r5tMySQL',  // Use environment variable or default to 'password'
       database: process.env.DB_NAME || 'chatapp'  // Use environment variable or default to 'chatapp'
   });
   
@@ -199,10 +199,10 @@ require("dotenv").config({
 
 // Improved channel creation endpoint
 app.post('/addChannel', authMiddleware, async (req, res) => {
-    const { channelName, channelMembers } = req.body;
+    const { channelName, channelMembers, isDefault } = req.body;
     const currentUsername = req.session.username;
     
-    console.log('Channel Addition attempt: ', { channelName, channelMembers });
+    console.log('Channel Addition attempt: ', { channelName, channelMembers, isDefault });
   
     if (!channelName) {
       return res.status(400).json({ message: 'Channel name is required.' });
@@ -242,8 +242,8 @@ app.post('/addChannel', authMiddleware, async (req, res) => {
       
       // Insert the channel into the database
       const [result] = await db.promise().query(
-        'INSERT INTO channels (channelName, channelMembers) VALUES (?, ?)',
-        [channelName, JSON.stringify(finalMembers)]
+        'INSERT INTO channels (channelName, channelMembers, isDefault) VALUES (?, ?, ?)',
+        [channelName, JSON.stringify(finalMembers), isDefault ? 1 : 0]
       );
       
       // Return the new channel information
@@ -251,7 +251,8 @@ app.post('/addChannel', authMiddleware, async (req, res) => {
         message: "Channel created successfully.", 
         id: result.insertId,
         channelName, 
-        channelMembers: finalMembers 
+        channelMembers: finalMembers,
+          isDefault
       });
     } catch (error) {
       console.error("Error creating channel:", error);
@@ -277,24 +278,35 @@ app.post('/addChannel', authMiddleware, async (req, res) => {
 // Improved endpoint for getting channels the user belongs to
 app.get("/getChannels", authMiddleware, async (req, res) => {
     try {
-      const username = req.session.username;
-      
-      if (!username) {
-        return res.status(401).json({ error: "User not authenticated" });
-      }
-  
-      // Get all channels where the user is a member
-      const [channels] = await db.promise().query(
-        'SELECT * FROM channels WHERE JSON_CONTAINS(channelMembers, ?)',
-        [JSON.stringify(username)]
-      );
-      
-      res.json(channels);
+        const username = req.session.username;
+
+        if (!username) {
+            return res.status(401).json({ error: "User not authenticated" });
+        }
+
+        // Fetch channels where the user is a member
+        const [userChannels] = await db.promise().query(
+            'SELECT * FROM channels WHERE JSON_CONTAINS(channelMembers, ?)',
+            [JSON.stringify(username)]
+        );
+
+        // Fetch default channels (e.g., General, Announcements, Random)
+        const [defaultChannels] = await db.promise().query(
+            "SELECT * FROM channels WHERE isDefault = 1"
+        );
+
+        // Merge the two lists, ensuring no duplicates
+        const allChannels = [...userChannels, ...defaultChannels.filter(
+            (defaultChannel) => !userChannels.some(userChannel => userChannel.id === defaultChannel.id)
+        )];
+
+        res.json(allChannels);
     } catch (error) {
-      console.error("Error fetching channels:", error);
-      res.status(500).json({ error: "Failed to fetch channels" });
+        console.error("Error fetching channels:", error);
+        res.status(500).json({ error: "Failed to fetch channels" });
     }
-  });
+});
+
   
 // Improved send message endpoint to handle channel messages better
 
@@ -347,7 +359,7 @@ app.get("/getMessages/:channelName", authMiddleware, async (req, res) => {
       `;
       
       const [messages] = await db.promise().query(query, [channelName]);
-      console.log(`Found ${messages.length} messages`); // Debug log
+      console.log(`Found ${messages.length} messages`);
       
       res.json(messages);
     } catch (error) {
@@ -364,9 +376,95 @@ app.get("/getMessages/:channelName", authMiddleware, async (req, res) => {
           res.status(401).json({ error: "Not logged in" });
       }
   });
-  
+
+app.post('/leaveChannel', authMiddleware, async (req, res) => {
+    const { channelName } = req.body;
+    const username = req.session.username;
+    if (!channelName) {
+        return res.status(400).json({ message: 'could not fetch channel name.' });
+    }
+
+    try {
+        const [rows] = await db.promise().query(
+            'SELECT channelMembers FROM channels WHERE channelName = ?',
+            [channelName]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Channel not found.' });
+        }
+        // console.log("PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
+        //
+        //
+        // console.log(rows);
+        // console.log(rows[0].channelMembers);
+
+        let members =rows[0].channelMembers || '[]'; // Parse the JSON string to an array
+
+        // removes user
+        members = members.filter(member => member !== username);
+        properFormatMembers = JSON.stringify(members);
+        if (members.length === 0) {
+            // if no one left, channel is deleted
+            await db.promise().query('DELETE FROM channels WHERE channelName = ?', [channelName]);
+            return res.json({ message: 'No one left in channel. Channel has been deleted as no members remain.' });
+        }
+
+        // Update the channel with the new members list
+        await db.promise().query(
+            'UPDATE channels SET channelMembers = ? WHERE channelName = ?',
+            [JSON.stringify(members), channelName]
+        );
+
+        res.json({ message: 'You have left the channel successfully.' });
+    } catch (error) {
+        console.error("Error leaving channel:", error);
+        res.status(500).json({ message: 'Error leaving channel', error: error.message });
+    }
+});
+
+//Automatically creates three default channels
+    const createDefaultChannels = async () => {
+        const channelName = 'All General'; //one channel check  is sufficient
+        try {
+            //channel existance
+            db.query(
+                'SELECT COUNT(*) AS count FROM all_channel WHERE channelName = ?',
+                [channelName],
+                (error, results) => {
+                    if (error) {
+                        console.error('Error checking channel:', error);
+                        return;
+                    }
+
+                    const channelExists = results[0].count > 0;
+
+                    //insert if not exist
+                    if (!channelExists) {
+                        db.query(
+                            "INSERT INTO channels (channelName, channelMembers, isDefault) VALUES (?, '[]', 1) ON DUPLICATE KEY UPDATE isDefault = 1",
+                            [channelName],
+                            (insertError) => {
+                                if (insertError) {
+                                    console.error('Error creating channel:', insertError);
+                                } else {
+                                    console.log(`Created channel: ${channelName}`);
+                                }
+                            }
+                        );
+                    } else {
+                        console.log(`Channel already exists: ${channelName}`);
+                    }
+                }
+            );
+        } catch (error) {
+            console.error('Error checking/creating channel:', error);
+        }
+    };
+
   // Start the server
   if (process.env.NODE_ENV !== 'test') {
+      createDefaultChannels();//makes channels accessible before server can respond
       app.listen(3001, () => {
           console.log('Server is running on port 3001');
       });

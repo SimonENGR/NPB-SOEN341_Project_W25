@@ -13,6 +13,7 @@ function ChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [username, setUsername] = useState('You');
   const [chats, setChats] = useState([]);
+  const [isDefault, setIsDefault] = useState(false);
 
   const navigate = useNavigate();
 
@@ -168,7 +169,8 @@ const fetchChannelMessages = async (channelName) => {
         "http://localhost:3001/addChannel",
         {
           channelName: channelName.trim(),
-          channelMembers: membersList
+          channelMembers: membersList,
+          isDefault: isDefault
         },
         { withCredentials: true }
       );
@@ -186,6 +188,7 @@ const fetchChannelMessages = async (channelName) => {
       setChannelName("");
       setChannelMembers("");
       setChannelAdd(false);
+      setIsDefault(false);
     } catch (error) {
       console.error("Error creating channel:", error);
       alert("Error creating channel: " + (error.response?.data?.message || error.message));
@@ -212,6 +215,25 @@ const fetchChannelMessages = async (channelName) => {
     }
   };
 
+  const leaveChannel = async()=>{
+    if (!selectedChannel) {
+      alert("No channel selected to leave.");
+      return;
+    }
+    try {
+      const response = await axios.post('http://localhost:3001/leaveChannel', {
+        channelName: selectedChannel.channelName,
+      }, { withCredentials: true });
+      alert(response.data.message || "Left the channel successfully!");
+
+      // refreshes the channel list after leaving
+      const updatedChannels = await axios.get('http://localhost:3001/getChannels', { withCredentials: true });
+      setChannels(updatedChannels.data);
+    } catch (error) {
+      console.error("Error leaving channel:", error);
+    }
+  }
+
   return (
     <div className="app-container">
       {/* Top Navigation Bar */}
@@ -230,6 +252,7 @@ const fetchChannelMessages = async (channelName) => {
               Add Channel
             </button>
           )}
+          <button onClick={leaveChannel}>Leave Channel</button>
         </div>
         <div className="user-controls">
           <span className="current-user">{username}</span>
@@ -341,6 +364,16 @@ const fetchChannelMessages = async (channelName) => {
                   onChange={(e) => setChannelMembers(e.target.value)}
                   required
                 />
+              </div>
+              <div>
+                <label>
+                  <input
+                      type="checkbox"
+                      checked={isDefault}
+                      onChange={(e) => setIsDefault(e.target.checked)}
+                  />
+                  Make this a default channel
+                </label>
               </div>
               <div className="form-buttons">
                 <button type="submit" className="primary-button">Create</button>
