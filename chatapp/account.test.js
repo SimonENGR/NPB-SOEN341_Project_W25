@@ -101,8 +101,8 @@ describe("POST /login", () => {
         const response = await request(app)
             .post("/login")
             .send({
-                username: "abc124",  // Assuming this username exists in the database
-                password: "abc124"   // Correct password
+                username: "abc127",  // Assuming this username exists in the database
+                password: "abc127"   // Correct password
             });
 
       expect(response.status).toBe(200);  // OK
