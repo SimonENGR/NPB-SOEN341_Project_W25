@@ -108,7 +108,14 @@ describe("POST /login", () => {
       expect(response.status).toBe(200);  // OK
     });
 
-    afterAll((done) => {
-        server.close(done);
+    it("should have abc127 user present in the database", async () => {
+        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db;
+        const [rows] = await dbConnection.promise().query(
+            "SELECT * FROM users WHERE username = ?",
+            ["abc127"]
+        );
+        console.log("User record from DB:", rows);
+        expect(rows.length).toBeGreaterThan(0);
     });
+    
 });

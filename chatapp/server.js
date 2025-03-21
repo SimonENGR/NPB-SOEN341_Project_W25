@@ -123,6 +123,7 @@ app.post('/login', async (req, res) => {
             `SELECT * FROM users WHERE username = ?`,
             [username]
         );
+        console.log("Query result for login:", rows);
         const user = rows[0];
         if (!user) {
             return res.status(400).send('User not found');
