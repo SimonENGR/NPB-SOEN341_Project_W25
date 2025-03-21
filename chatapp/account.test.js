@@ -8,7 +8,7 @@ const getNextTestUser = () => {
     const username = `abc${userCounter}`;
     const email = `abc${userCounter}@hotmail.com`;
     const password = `abc${userCounter}`;
-    userCounter++; // Increment the counter for the next test
+    userCounter++; // Increment for the next test
     return { username, email, password };
 };
 
@@ -106,4 +106,9 @@ describe("POST /login", () => {
         console.log("User record from DB:", rows);
         expect(rows.length).toBeGreaterThan(0);
     });
+});
+
+// After all tests, close the DB connection to help Jest exit
+afterAll(() => {
+    return activeDB.end();
 });

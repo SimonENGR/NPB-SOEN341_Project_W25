@@ -11,33 +11,24 @@ const app = express();
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json()); // Ensure that the body parser is configured correctly
 
-// Local MySQL database for local testing
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'user', // For debugging locally: change to 'root' if needed; for GitHub, use 'user'
-    password: 'password',
-    database: 'chatapp'
-});
-
-// GitHub Actions MySQL database for testing on GitHub
-let dbase; // Variable used for CI environment
+let activeDB; // We'll assign this based on the environment
 
 if (process.env.CI_ENV === 'github') {
-    // Use MySQL for GitHub Actions instead of SQLite
-    dbase = mysql.createConnection({
+    // CI (GitHub Actions) database configuration
+    activeDB = mysql.createConnection({
         host: '127.0.0.1',
         user: 'user',
         password: 'password',
         database: 'chatapp'
     });
 
-    dbase.connect((err) => {
+    activeDB.connect((err) => {
         if (err) {
             console.error("GitHub MySQL connection failed:", err);
             return;
         }
         console.log("GitHub MySQL connection successful!");
-        dbase.query("SHOW TABLES;", (err, results) => {
+        activeDB.query("SHOW TABLES;", (err, results) => {
             if (err) {
                 console.error("Error listing tables:", err);
             } else {
@@ -45,8 +36,26 @@ if (process.env.CI_ENV === 'github') {
             }
         });
     });
+
+    // Set up session middleware using the CI DB connection
+    const sessionStore = new MySQLStore({}, activeDB);
+    app.use(
+        session({
+            secret: 'we-do-procrastinate',
+            resave: false,
+            store: sessionStore,
+            saveUninitialized: false,
+            cookie: { secure: false, sameSite: 'lax' },
+        })
+    );
 } else {
-    // Local MySQL database initialization
+    // Local database configuration
+    const db = mysql.createConnection({
+        host: 'localhost',
+        user: 'user', // If debugging locally, change this to 'root' if necessary.
+        password: 'password',
+        database: 'chatapp'
+    });
     db.connect((err) => {
         if (err) {
             console.error('Database connection failed:', err);
@@ -54,9 +63,10 @@ if (process.env.CI_ENV === 'github') {
         }
         console.log('Connected to MySQL database');
     });
+    activeDB = db;
 
+    // Set up session middleware using the local DB connection
     const sessionStore = new MySQLStore({}, db);
-
     app.use(
         session({
             secret: 'we-do-procrastinate',
@@ -85,12 +95,11 @@ app.post('/register', async (req, res) => {
     console.log("Password hashed successfully");
 
     try {
-        // Correctly switch between db and dbase
-        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db;
+        // Use the active DB connection
         console.log("Environment CI_ENV:", process.env.CI_ENV);
-        console.log("Database connection in use:", process.env.CI_ENV === 'github' ? "dbase" : "db");
+        console.log("Database connection in use:", process.env.CI_ENV === 'github' ? "GitHub DB" : "Local DB");
 
-        await dbConnection.promise().query(
+        await activeDB.promise().query(
             `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
             [username, email, hashedPassword, role]
         );
@@ -113,8 +122,7 @@ app.post('/login', async (req, res) => {
     }
 
     try {
-        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db;
-        const [rows] = await dbConnection.promise().query(
+        const [rows] = await activeDB.promise().query(
             `SELECT * FROM users WHERE username = ?`,
             [username]
         );
@@ -129,6 +137,7 @@ app.post('/login', async (req, res) => {
             return res.status(400).send('Username or password is incorrect');
         }
 
+        // Assign session values (now safe because session middleware is mounted in all environments)
         req.session.userId = user.id;
         req.session.username = user.username;
         res.status(200).send({ message: 'Login successful', userId: user.id, username: user.username });
@@ -137,9 +146,6 @@ app.post('/login', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
-
-// Decide on the active DB connection
-const activeDB = process.env.CI_ENV === 'github' ? dbase : db;
 
 // Export the Express app and the active database connection
 module.exports = { app, activeDB };
