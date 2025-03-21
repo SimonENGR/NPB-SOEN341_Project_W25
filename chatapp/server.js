@@ -16,7 +16,7 @@ const donotUse = 0;
 // Local MySQL database for local testing
 const db = mysql.createConnection({
     host: 'localhost',
-    user: 'root', // Change if needed
+    user: 'user', // Change if needed (a bit tedious, but set this to 'root' if running locally, change it to 'user' if you're about to commit to github and pass tests)
     password: 'password', // Add MySQL password if set
     database: 'chatapp'
 });
