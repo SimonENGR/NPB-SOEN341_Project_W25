@@ -146,11 +146,15 @@ app.post('/login', async (req, res) => {
 // Use the same logic for other endpoints to dynamically select `db` or `dbase`
 // by checking `process.env.CI_ENV`
 
-module.exports = app;
+// Decide on the active DB connection
+const activeDB = process.env.CI_ENV === 'github' ? dbase : db;
 
-// Start the server
+module.exports = { app, activeDB };
+
+// Start the server only if not in a test environment
 if (process.env.NODE_ENV !== 'test') {
     app.listen(3001, () => {
         console.log('Server is running on port 3001');
     });
 }
+

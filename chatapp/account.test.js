@@ -1,4 +1,4 @@
-const app = require('./server.js');
+const { app, activeDB } = require('./server.js');
 const request = require('supertest');
 
 let userCounter = 127; // Start with 123 as the base number
