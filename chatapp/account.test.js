@@ -1,7 +1,7 @@
 const app = require('./server.js');
 const request = require('supertest');
 
-let userCounter = 124; // Start with 123 as the base number
+let userCounter = 127; // Start with 123 as the base number
 
 const getNextTestUser = () => {
     const username = `abc${userCounter}`;
@@ -97,14 +97,14 @@ describe("POST /login", () => {
         expect(response.status).toBe(400); // Unauthorized
     });
 
-  //  it("should return a success message if the username and password are correct", async () => {
-   //     const response = await request(app)
-   //         .post("/login")
-   //         .send({
-   //             username: "abc124",  // Assuming this username exists in the database
-   //             password: "abc124"   // Correct password
-   //         });
-//
-  //      expect(response.status).toBe(200);  // OK
-  //  });
+    it("should return a success message if the username and password are correct", async () => {
+        const response = await request(app)
+            .post("/login")
+            .send({
+                username: "abc124",  // Assuming this username exists in the database
+                password: "abc124"   // Correct password
+            });
+
+      expect(response.status).toBe(200);  // OK
+    });
 });
