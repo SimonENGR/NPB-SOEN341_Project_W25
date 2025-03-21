@@ -1,7 +1,8 @@
+// account.test.js
 const { app, activeDB } = require('./server.js');
 const request = require('supertest');
 
-let userCounter = 127; // Start with 123 as the base number
+let userCounter = 127; // Start with 127 as the base number
 
 const getNextTestUser = () => {
     const username = `abc${userCounter}`;
@@ -12,7 +13,6 @@ const getNextTestUser = () => {
 };
 
 describe("POST /register", () => {
-
     it("should create a new account with valid data", async () => {
         const { username, email, password } = getNextTestUser();
     
@@ -31,7 +31,6 @@ describe("POST /register", () => {
         expect(response.status).toBe(201);
     });
     
-
     it("should return an error if the username is missing", async () => {
         const response = await request(app)
             .post("/register")
@@ -40,9 +39,7 @@ describe("POST /register", () => {
                 email: "simon444@hotmail.com",
                 password: "simon444"
             });
-
-        expect(response.status).toBe(500);  // Bad Request
-
+        expect(response.status).toBe(500);
     });
 
     it("should return an error if the email is missing", async () => {
@@ -53,7 +50,6 @@ describe("POST /register", () => {
                 email: "",
                 password: "simon444"
             });
-
         expect(response.status).toBe(500);
     });
 
@@ -65,15 +61,12 @@ describe("POST /register", () => {
                 email: "simon555@hotmail.com",
                 password: ""
             });
-
         expect(response.status).toBe(500);
-
     });
 });
 
 // Login tests
 describe("POST /login", () => {
-
 
     it("should return an error if the username is missing", async () => {
         const response = await request(app)
@@ -82,7 +75,6 @@ describe("POST /login", () => {
                 username: "",
                 password: "simon3"
             });
-
         expect(response.status).toBe(400);
     });
 
@@ -93,8 +85,7 @@ describe("POST /login", () => {
                 username: "a",  // Assuming this username exists in the database
                 password: "simon4"   // Wrong password
             });
-
-        expect(response.status).toBe(400); // Unauthorized
+        expect(response.status).toBe(400);
     });
 
     it("should return a success message if the username and password are correct", async () => {
@@ -104,18 +95,15 @@ describe("POST /login", () => {
                 username: "abc127",  // Assuming this username exists in the database
                 password: "abc127"   // Correct password
             });
-
-      expect(response.status).toBe(200);  // OK
+        expect(response.status).toBe(200);
     });
 
     it("should have abc127 user present in the database", async () => {
-        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db;
-        const [rows] = await dbConnection.promise().query(
+        const [rows] = await activeDB.promise().query(
             "SELECT * FROM users WHERE username = ?",
             ["abc127"]
         );
         console.log("User record from DB:", rows);
         expect(rows.length).toBeGreaterThan(0);
     });
-    
 });

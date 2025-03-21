@@ -1,28 +1,26 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const mysql = require('mysql2');
-const sqlite3 = require('sqlite3');
-const { open } = require('sqlite3');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const app = express();
 
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json()); // Ensure that the body parser is configured correctly
-const donotUse = 0;
 
 // Local MySQL database for local testing
 const db = mysql.createConnection({
     host: 'localhost',
-    user: 'user', // Change if needed (a bit tedious, but set this to 'root' if running locally, change it to 'user' if you're about to commit to github and pass tests)
-    password: 'password', // Add MySQL password if set
+    user: 'user', // For debugging locally: change to 'root' if needed; for GitHub, use 'user'
+    password: 'password',
     database: 'chatapp'
 });
 
 // GitHub Actions MySQL database for testing on GitHub
-let dbase; // Variable used for SQLite or MySQL in CI environment
+let dbase; // Variable used for CI environment
 
 if (process.env.CI_ENV === 'github') {
     // Use MySQL for GitHub Actions instead of SQLite
@@ -92,7 +90,6 @@ app.post('/register', async (req, res) => {
         console.log("Environment CI_ENV:", process.env.CI_ENV);
         console.log("Database connection in use:", process.env.CI_ENV === 'github' ? "dbase" : "db");
 
-
         await dbConnection.promise().query(
             `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
             [username, email, hashedPassword, role]
@@ -106,8 +103,6 @@ app.post('/register', async (req, res) => {
     }
 });
 
-
-
 // Login route
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -118,7 +113,7 @@ app.post('/login', async (req, res) => {
     }
 
     try {
-        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db; // Use appropriate database
+        const dbConnection = process.env.CI_ENV === 'github' ? dbase : db;
         const [rows] = await dbConnection.promise().query(
             `SELECT * FROM users WHERE username = ?`,
             [username]
@@ -143,12 +138,10 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Use the same logic for other endpoints to dynamically select `db` or `dbase`
-// by checking `process.env.CI_ENV`
-
 // Decide on the active DB connection
 const activeDB = process.env.CI_ENV === 'github' ? dbase : db;
 
+// Export the Express app and the active database connection
 module.exports = { app, activeDB };
 
 // Start the server only if not in a test environment
@@ -157,4 +150,3 @@ if (process.env.NODE_ENV !== 'test') {
         console.log('Server is running on port 3001');
     });
 }
-
