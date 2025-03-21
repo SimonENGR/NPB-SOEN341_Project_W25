@@ -107,4 +107,8 @@ describe("POST /login", () => {
 
       expect(response.status).toBe(200);  // OK
     });
+
+    afterAll((done) => {
+        server.close(done);
+    });
 });
