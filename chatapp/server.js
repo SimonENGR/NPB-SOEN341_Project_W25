@@ -377,6 +377,46 @@ app.get('/getUsername', (req, res) => {// sends usename to frontend database get
     }
 });
 
+// Delete message by admin
+// Add this new endpoint to server.js
+app.delete('/deleteMessage/:messageId', authMiddleware, async (req, res) => {
+    try {
+      const messageId = req.params.messageId;
+      const userId = req.session.userId;
+      
+      // First check if user is admin
+      const [userRows] = await db.promise().query(
+        'SELECT role FROM users WHERE id = ?',
+        [userId]
+      );
+      
+      if (userRows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const isAdmin = userRows[0].role === 'admin';
+      
+      if (!isAdmin) {
+        return res.status(403).json({ error: 'Only admins can delete messages' });
+      }
+      
+      // Delete the message
+      const [result] = await db.promise().query(
+        'DELETE FROM all_chats_in_haven WHERE id = ?',
+        [messageId]
+      );
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'Message not found' });
+      }
+      
+      res.json({ success: true, message: 'Message deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      res.status(500).json({ error: 'Failed to delete message' });
+    }
+  });
+
 app.post('/leaveChannel', authMiddleware, async (req, res) => {
   const { channelName } = req.body;
   const username = req.session.username;
