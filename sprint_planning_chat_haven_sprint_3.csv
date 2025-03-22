@@ -1,0 +1,16 @@
+Issue #,User Story Title/Task Title,Description/Associated Tasks,Due Date,Priority,"Risk (low, medium, high) + explanation",Responsible,Story Points
+#33,US.008 - User Presence and Offline Messaging,"As a user, I want to see other users' statuses and be able to send messages while they are offline so that they receive them when they log in.",2025-03-21,High,Medium - Requires real-time updates and proper database handling,Simon Muthui Rohan Diego George Emily,9
+#34,TSK.008.001 - Display User List on Dashboard,Create a UI component to display all registered users on the dashboard.,2025-03-10,High,Low - Mostly frontend implementation,George Emily,3
+#35,TSK.008.002 - Implement Status Indicators,"Show user statuses (online, offline, away) on the dashboard using real-time updates.",2025-03-12,High,Medium - Requires WebSocket or polling for real-time updates,Simon Rohan,4
+#36,TSK.008.003 - Track Last Seen Timestamp,Store and display the last seen timestamp for offline users.,2025-03-14,Medium,Medium - Needs database updates and optimization,Diego,3
+#37,TSK.008.004 - Enable Messaging for Offline Users,"Allow users to send messages to offline users, delivering them when they log in.",2025-03-18,High,High - Requires message queuing or delayed processing,Muthui,6
+#38,US.009 - Enhancing Text Channels,"As a user, I want to participate in default channels, create private channels, and manage channel membership.",2025-03-21,High,Medium - Requires changes to database and access control,Simon Muthui Rohan Diego George Emily,10
+#39,TSK.009.001 - Implement Default Channels,Ensure the system initializes default channels when it starts.,2025-03-11,High,Low - Backend setup needed,Simon Rohan,3
+#40,TSK.009.002 - Enable Private Channel Creation,Allow users to create private channels and invite others.,2025-03-13,High,Medium - Needs access control,Muthui Diego,5
+#41,TSK.009.003 - Implement Channel Joining Requests,Enable users to request to join private channels and await approval.,2025-03-15,High,Medium - Requires user roles and approval flow,George Emily,5
+#42,TSK.009.004 - Enable Leaving Channels,Allow users to leave channels they are members of.,2025-03-17,Medium,Low - Straightforward frontend and backend logic,Rohan,3
+#43,US.010 - Emojis and Quoted Messages,"As a user, I want to send emojis, quote messages, and see formatted quotations in conversations.",2025-03-21,High,Medium - Requires UI updates and new message formatting logic,Simon Muthui Rohan Diego George Emily,8
+#44,TSK.010.001 - Adding Emojis,Implement emoji support for chat messages.,2025-03-09,High,Low - Simple UI addition,George Emily,3
+#45,TSK.010.002 - Allow Messages to be Put in Quotes,Enable users to quote messages in conversations.,2025-03-11,Medium,Medium - Requires referencing previous messages,Simon Rohan,4
+#46,TSK.010.003 - Better Design for Quoted Messages,Improve the UI for displaying quoted messages in conversations.,2025-03-14,Medium,Low - Mostly frontend styling,Diego,3
+,,,,,,,
