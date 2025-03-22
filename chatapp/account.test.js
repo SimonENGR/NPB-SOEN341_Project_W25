@@ -2,7 +2,7 @@
 const { app, activeDB } = require('./server.js');
 const request = require('supertest');
 
-let userCounter = 130; // Start with 127 as the base number
+let userCounter = 127; // Start with 127 as the base number
 
 const getNextTestUser = () => {
     const username = `abc${userCounter}`;
@@ -112,4 +112,11 @@ afterAll(async () => {
     console.log("Closing database connection...");
     await activeDB.end();
     console.log("Database connection closed.");
+
+    console.log("Active handles:");
+    console.log(process._getActiveHandles());
+    console.log("Active requests:");
+    console.log(process._getActiveRequests());
 });
+
+
