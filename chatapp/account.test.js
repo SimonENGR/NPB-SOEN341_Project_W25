@@ -108,7 +108,8 @@ describe("POST /login", () => {
     });
 });
 
-// After all tests, close the DB connection to help Jest exit
-afterAll(() => {
-    return activeDB.end();
+afterAll(async () => {
+    console.log("Closing database connection...");
+    await activeDB.end();
+    console.log("Database connection closed.");
 });
