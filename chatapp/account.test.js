@@ -2,7 +2,7 @@
 const { app, activeDB } = require('./server.js');
 const request = require('supertest');
 
-let userCounter = 127; // Start with 127 as the base number
+let userCounter = 130; // Start with 127 as the base number
 
 const getNextTestUser = () => {
     const username = `abc${userCounter}`;

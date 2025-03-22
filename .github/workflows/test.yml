@@ -69,3 +69,4 @@ jobs:
         run: |
           cd chatapp
           npm test -- --detectOpenHandles
+        timeout-minutes: 1
