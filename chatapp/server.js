@@ -137,10 +137,12 @@ app.post('/login', async (req, res) => {
             return res.status(400).send('Username or password is incorrect');
         }
 
+        await activeDB.promise().query( `UPDATE users SET isOnline = 1 WHERE id = ?`, [user.id]);
+
         // Assign session values (now safe because session middleware is mounted in all environments)
         req.session.userId = user.id;
         req.session.username = user.username;
-        res.status(200).send({ message: 'Login successful', userId: user.id, username: user.username });
+        res.status(200).send({ message: 'Login successful', userId: user.id, username: user.username, isOnline: 1 });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -148,7 +150,31 @@ app.post('/login', async (req, res) => {
 });
 
 // Logout route
-app.post('/logout', (req, res) => {
+// app.post('/logout', (req, res) => {
+//     console.log("Before logout:", req.session);
+//     req.session.destroy((err) => {
+//         if (err) {
+//             console.error("Error destroying session:", err);
+//             return res.status(500).send("Failed to log out");
+//         }
+//         console.log("After logout:", req.session);
+//         res.status(200).send("Logged out successfully");
+//     });
+// });
+
+app.post('/logout', async (req, res) => {
+    const userId = req.session.userId;
+    try {
+        // Update the user's status to offline (0)
+        await activeDB.promise().query(
+            `UPDATE users SET isOnline = 0 WHERE id = ?`,
+            [userId]
+        );
+    } catch (updateError) {
+        console.error("Error updating status on logout:", updateError);
+        // Optional: You can decide how to handle this error (e.g., continue or abort logout)
+    }
+    
     console.log("Before logout:", req.session);
     req.session.destroy((err) => {
         if (err) {
@@ -160,6 +186,7 @@ app.post('/logout', (req, res) => {
     });
 });
 
+
 // Get all users for DM functionality
 app.get('/getUsers', authMiddleware, async (req, res) => {
     try {
@@ -167,7 +194,7 @@ app.get('/getUsers', authMiddleware, async (req, res) => {
         
         // Get all users except the current user
         const [users] = await activeDB.promise().query(
-            'SELECT id, username FROM users WHERE id <> ?',
+            'SELECT id, username, isOnline, last_active FROM users WHERE id <> ?',
             [currentUserId]
         );
         
