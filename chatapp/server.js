@@ -187,6 +187,25 @@ app.post('/logout', async (req, res) => {
 });
 
 
+app.post('/status', async (req,res) => {
+    const { status } = req.body;
+    const userId = req.session.userId; // or JWT token
+
+    const query = 'UPDATE users SET isOnline = ?, last_active = CURRENT_TIMESTAMP WHERE id = ?';
+  
+    try {
+        // Use promise-based query execution
+        const [result] = await activeDB.promise().query(query, [status, userId]);
+        
+        // If the update is successful, send a response
+        return res.status(200).send('User status updated');
+      } catch (err) {
+        // Handle errors
+        console.error('Error updating status:', err);
+        return res.status(500).send('Server error');
+      }; 
+})
+
 // Get all users for DM functionality
 app.get('/getUsers', authMiddleware, async (req, res) => {
     try {
