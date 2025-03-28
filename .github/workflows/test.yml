@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - cicdtesting
+      - status
   pull_request:
     branches:
       - main
