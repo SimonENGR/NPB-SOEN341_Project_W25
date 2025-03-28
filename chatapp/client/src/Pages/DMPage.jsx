@@ -18,6 +18,7 @@ function DMPage() {
   const [quotedMessage, setQuotedMessage] = useState(null);
   const emojiPickerRef = useRef(null);
   const emojiButtonRef = useRef(null); // New ref for the emoji button
+  const [currentStatus, setCurrentStatus] = useState(1);
 
   // Common emoji categories and their emojis
   const emojiCategories = [
@@ -372,6 +373,30 @@ function DMPage() {
     };
   }, [showEmojiPicker]);
   
+  useEffect(() => {
+    let timeout;
+    
+    const resetTimer = () => {
+      clearTimeout(timeout);
+      setCurrentStatus(1);
+      axios.post('http://localhost:3001/status', { status: 1 }, {withCredentials:true});
+      timeout = setTimeout(async () => {
+        setCurrentStatus(2); // Away
+        await axios.post('http://localhost:3001/status', { status: 2 }, {withCredentials:true});
+      }, 900000); // 5 minutes idle
+    };
+    
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keypress', resetTimer);
+    
+    resetTimer(); // Start the timer when component mounts
+    
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('keypress', resetTimer);
+    };
+  }, []);  
   return (
     <div className="app-container">
       {/* Top Navigation Bar */}

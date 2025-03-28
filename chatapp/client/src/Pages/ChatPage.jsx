@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef} from "react";
 import axios from "axios";
 import "../Styling/ChatPage.css";
 import { useNavigate } from "react-router-dom";
@@ -17,10 +17,42 @@ function ChatPage() {
   // New state for channel filtering
   const [channelFilter, setChannelFilter] = useState("all"); // "all", "default", or "custom"
   const [filteredChannels, setFilteredChannels] = useState([]);
-
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null);
+  const emojiButtonRef = useRef(null); // New ref for the emoji button
   const [quotedMessage, setQuotedMessage] = useState(null);
 
   const navigate = useNavigate();
+
+  const emojiCategories = [
+    {
+      name: "Smileys",
+      emojis: ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎"]
+    },
+    {
+      name: "Emotions",
+      emojis: ["😏", "😒", "😞", "😔", "😟", "😕", "🙁", "☹️", "😣", "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡", "🤬", "😱", "😨", "😰", "😥", "😓", "🤗", "🤔", "🤭", "🤫", "🤥"]
+    },
+    {
+      name: "Gestures",
+      emojis: ["👋", "🤚", "✋", "🖐️", "👌", "🤌", "🤏", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉", "👆", "👇", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🙏"]
+    },
+    {
+      name: "Animals",
+      emojis: ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦", "🦅", "🦆", "🦉", "🐺", "🐗", "🐴", "🦄"]
+    },
+    {
+      name: "Food",
+      emojis: ["🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🌽", "🍟", "🍕", "🌭", "🍔", "🍗"]
+    }
+  ];
+
+  // Handle emoji click
+  const handleEmojiClick = (emoji) => {
+    console.log("Emoji clicked:", emoji);
+    setNewMessage(prevMsg => prevMsg + emoji);
+    setShowEmojiPicker(false);
+  };
 
   // Fetch channel messages when a channel is selected
   useEffect(() => {
@@ -329,6 +361,53 @@ function ChatPage() {
     }
   };
 
+  const messagesEndRef = useRef(null);
+  
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      scrollToBottom();
+    }
+  }, [chats]);
+
+  const toggleEmojiPicker = (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
+    console.log("Toggle emoji picker clicked!");
+    console.log("Current state:", showEmojiPicker);
+    setShowEmojiPicker(prevState => !prevState);
+  };
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // Check if the click is outside both the emoji picker and the emoji button
+      if (
+        emojiPickerRef.current && 
+        !emojiPickerRef.current.contains(event.target) && 
+        emojiButtonRef.current && 
+        !emojiButtonRef.current.contains(event.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    }
+
+    // Only add the event listener if the emoji picker is shown
+    if (showEmojiPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+
   return (
       <div className="app-container">
         {/* Top Navigation Bar */}
@@ -440,6 +519,7 @@ function ChatPage() {
                           <p>Be the first to send a message!</p>
                         </div>
                     )}
+                    <div ref={messagesEndRef} />
                   </div>
                   <div className="input-container">
                     {quotedMessage && (
@@ -458,7 +538,39 @@ function ChatPage() {
                           </button>
                         </div>
                     )}
-
+                    <div className="input-tools">
+                      <button 
+                        ref={emojiButtonRef}
+                        className="emoji-button" 
+                        onClick={toggleEmojiPicker}
+                      >
+                        😊
+                      </button>
+                    </div>
+                    {showEmojiPicker && (
+                      <div className="emoji-picker-container" ref={emojiPickerRef}>
+                        <div className="emoji-picker-custom">
+                          <div className="emoji-categories">
+                            {emojiCategories.map((category, catIndex) => (
+                              <div key={catIndex} className="emoji-category">
+                                <div className="category-name">{category.name}</div>
+                                <div className="emoji-grid">
+                                  {category.emojis.map((emoji, emojiIndex) => (
+                                    <button
+                                      key={emojiIndex}
+                                      className="emoji-item"
+                                      onClick={() => handleEmojiClick(emoji)}
+                                    >
+                                      {emoji}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <input
                         type="text"
                         placeholder="Type a message..."
