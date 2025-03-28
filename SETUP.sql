@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS channels (
     id INT AUTO_INCREMENT PRIMARY KEY,
     channelName VARCHAR(255) NOT NULL,
     channelMembers JSON,
-    isDefault TINYINT(1) DEFAULT 0
+    isDefault TINYINT DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS all_chats_in_haven (
