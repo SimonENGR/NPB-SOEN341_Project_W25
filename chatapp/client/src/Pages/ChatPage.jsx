@@ -487,7 +487,43 @@ function ChatPage() {
                   </div>
                   <div className="messages-container">
                     {chats.length > 0 ? (
-                        chats.map((msg, index) => (
+                        chats.map((msg, index) => {
+                          // Try to parse the message content if it's in JSON format
+                          let chat_content = msg.text;
+                          let quoteData = null;
+                          
+                          try {
+                            // Check if the message is already in our new format (object with quoteData)
+                            if (msg.quoteData) {
+                              quoteData = msg.quoteData;
+                            } 
+                            // Try to parse the message as JSON (for messages from the database)
+                            else if (typeof msg.text === 'string' && msg.text.startsWith('{') && msg.text.includes('quoteData')) {
+                              const parsedMsg = JSON.parse(msg.text);
+                              chat_content = parsedMsg.text;
+                              quoteData = parsedMsg.quoteData;
+                            }
+                            // Check for legacy format with '> sender: text\n\n' pattern
+                            else if (typeof msg.text === 'string' && msg.text.startsWith('> ') && msg.text.includes('\n\n')) {
+                              const parts = msg.text.split('\n\n');
+                              const quotePart = parts[0].substring(2); // Remove '> '
+                              const quoteParts = quotePart.split(': ');
+                              
+                              if (quoteParts.length >= 2) {
+                                quoteData = {
+                                  sender: quoteParts[0],
+                                  text: quoteParts.slice(1).join(': ')
+                                };
+                                chat_content = parts.slice(1).join('\n\n');
+                              }
+                            }
+                          } catch (e) {
+                            console.error("Error parsing message:", e);
+                            // If parsing fails, use the original text
+                            chat_content = msg.text;
+                          }
+                          
+                          return (                          
                             <div
                                 key={index}
                                 className={`message ${msg.username === username ? "user-message" : "other-message"}`}
@@ -508,11 +544,18 @@ function ChatPage() {
                                   )}
                                 </div>
                               </div>
-                              <div className="message-body">
+                              <div className={`message-body ${quoteData ? 'message-body-with-quote' : ''}`}>
+                                {quoteData && (
+                                  <div className="quoted-reply">
+                                    <div className="quoted-reply-sender">{quoteData.sender}</div>
+                                    <div className="quoted-reply-text">{quoteData.text}</div>
+                                  </div>
+                                )}                                
                                 {msg.chat_content}
                               </div>
                             </div>
-                        ))
+                        );
+                      })
                     ) : (
                         <div className="empty-state">
                           <p>No messages in this channel yet.</p>

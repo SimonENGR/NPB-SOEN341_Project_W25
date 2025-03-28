@@ -189,7 +189,7 @@ app.post('/logout', async (req, res) => {
 
 app.post('/status', async (req,res) => {
     const { status } = req.body;
-    const userId = req.session.userId; // or JWT token
+    const userId = req.session.userId;
 
     const query = 'UPDATE users SET isOnline = ?, last_active = CURRENT_TIMESTAMP WHERE id = ?';
   

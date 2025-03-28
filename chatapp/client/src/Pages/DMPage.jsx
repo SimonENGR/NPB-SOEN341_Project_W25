@@ -383,7 +383,7 @@ function DMPage() {
       timeout = setTimeout(async () => {
         setCurrentStatus(2); // Away
         await axios.post('http://localhost:3001/status', { status: 2 }, {withCredentials:true});
-      }, 900000); // 5 minutes idle
+      }, 60000); // 5 minutes idle
     };
     
     window.addEventListener('mousemove', resetTimer);
