@@ -1,6 +1,7 @@
 const { app, activeDB } = require('./server.js');
 const request = require('supertest');
 
+<<<<<<< HEAD
 beforeAll(async () => {
     console.log("Setting up test users...");
     // Register adminUser
@@ -94,10 +95,23 @@ describe("POST /channels", () => {
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         expect(response.body.message).toBe("Message sent successfully!");
+=======
+describe("POST /channels", () => {
+    it("should let an admin create a channel with valid data", async () => {
+       
+    });
+
+    it("should let an admin create a DM with valid data", async () => {
+        
+    });
+
+    it("should let a user create a DM with valid data", async () => {
+>>>>>>> a123ee4ddf78bf92acae5a6ebbe8ad5bef3e7dd9
     });
 });
 
 describe("POST /chat", () => {
+<<<<<<< HEAD
     it("should return a success message if two users can message", async () => {
         const userSession1 = await request(app)
             .post('/login')
@@ -128,6 +142,9 @@ describe("POST /chat", () => {
         expect(fetchResponse.body).toBeDefined();
         expect(fetchResponse.body.some(msg => msg.text === 'Hi, user2!')).toBe(true);
     });
+=======
+    
+>>>>>>> a123ee4ddf78bf92acae5a6ebbe8ad5bef3e7dd9
 });
 
 afterAll(async () => {
