@@ -13,7 +13,8 @@ function ChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const [username, setUsername] = useState('You');
   const [chats, setChats] = useState([]);
-  const [isDefault, setIsDefault] = useState(false);
+  // const [isDefault, setIsDefault] = useState(false);
+  const [isDefault, setIsDefault] = useState(true);
   // New state for channel filtering
   const [channelFilter, setChannelFilter] = useState("all"); // "all", "default", or "custom"
   const [filteredChannels, setFilteredChannels] = useState([]);
@@ -247,7 +248,7 @@ const fetchChannelMessages = async (channelName) => {
       setChannelName("");
       setChannelMembers("");
       setChannelAdd(false);
-      setIsDefault(false);
+      setIsDefault(true);
     } catch (error) {
       console.error("Error creating channel:", error);
       alert("Error creating channel: " + (error.response?.data?.message || error.message));
@@ -408,14 +409,14 @@ const fetchChannelMessages = async (channelName) => {
         <div className="nav-links">
           <button className="nav-link active">Channels</button>
           <button className="nav-link" onClick={goToDMs}>Messages</button>
-          {userRole === "Admin" && (
+          {/* {userRole === "Admin" && ( */}
             <button 
               onClick={() => setChannelAdd(true)} 
               className="nav-link add-channel"
             >
               Add Channel
             </button>
-          )}
+          {/* )} */}
           <button onClick={leaveChannel} className="nav-link add-channel">Leave Channel</button>
         </div>
         <div className="user-controls">
@@ -642,17 +643,20 @@ const fetchChannelMessages = async (channelName) => {
                   required
                 />
               </div>
-              <div className="form-group">
+              {userRole === "User" && (<div className="form-group">
                 <label>Members</label>
                 <input
                   type="text"
                   placeholder="Enter usernames (comma-separated)"
                   value={channelMembers}
-                  onChange={(e) => setChannelMembers(e.target.value)}
+                  onChange={(e) => {setChannelMembers(e.target.value);
+                                    setIsDefault(false);}
+                  }
                   required
                 />
               </div>
-              <div className="form-group checkbox-group">
+              )}
+              {/* <div className="form-group checkbox-group">
                 <label>
                   <input
                       type="checkbox"
@@ -661,7 +665,7 @@ const fetchChannelMessages = async (channelName) => {
                   />
                   Make this a default channel
                 </label>
-              </div>
+              </div> */}
               <div className="form-buttons">
                 <button type="submit" className="primary-button">Create</button>
                 <button type="button" className="secondary-button" onClick={() => setChannelAdd(false)}>
