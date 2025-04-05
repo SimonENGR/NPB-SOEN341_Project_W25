@@ -18,6 +18,7 @@ function DMPage() {
   const [quotedMessage, setQuotedMessage] = useState(null);
   const emojiPickerRef = useRef(null);
   const emojiButtonRef = useRef(null); // New ref for the emoji button
+  const [currentStatus, setCurrentStatus] = useState(1);
 
   // Common emoji categories and their emojis
   const emojiCategories = [
@@ -112,6 +113,9 @@ function DMPage() {
       }
     };
     fetchUsers();
+    //update real time status 
+    const interval = setInterval(fetchUsers, 2000);
+    return () => clearInterval(interval);
   }, [navigate]);
 
   // Fetch current username
@@ -329,7 +333,7 @@ function DMPage() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
-  
+
   useEffect(() => {
     if (messagesEndRef.current) {
       scrollToBottom();
@@ -368,7 +372,31 @@ function DMPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showEmojiPicker]);
-
+  
+  useEffect(() => {
+    let timeout;
+    
+    const resetTimer = () => {
+      clearTimeout(timeout);
+      setCurrentStatus(1);
+      axios.post('http://localhost:3001/status', { status: 1 }, {withCredentials:true});
+      timeout = setTimeout(async () => {
+        setCurrentStatus(2); // Away
+        await axios.post('http://localhost:3001/status', { status: 2 }, {withCredentials:true});
+      }, 60000); // 5 minutes idle
+    };
+    
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keypress', resetTimer);
+    
+    resetTimer(); // Start the timer when component mounts
+    
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('keypress', resetTimer);
+    };
+  }, []);  
   return (
     <div className="app-container">
       {/* Top Navigation Bar */}
@@ -384,7 +412,7 @@ function DMPage() {
           <span className="current-user">{currentUsername}</span>
           <button onClick={handleLogout} className="logout-button">
             Logout
-          </button>
+          </button>          
         </div>
       </header>
 
@@ -433,6 +461,13 @@ function DMPage() {
                   >
                     <span className="item-icon">@</span>
                     <span className="item-name">{user.username}</span>
+                    <button className={`status-button ${user.isOnline === 1 ? "online" : user.isOnline === 2 ? "away" : "offline"}`}
+                    title={user.isOnline === 1 ? "Online" : user.isOnline === 2 ? "Away" : "Offline"}></button>
+                    <span className="last-active">
+                      {user.isOnline === 0 && user.last_active 
+                        ? `Last active: ${new Date(user.last_active).toLocaleString()}`
+                        : ''}
+                    </span>
                   </div>
                 ))
               ) : (
