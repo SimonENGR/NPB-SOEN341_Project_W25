@@ -19,7 +19,7 @@ if (process.env.CI_ENV === 'github') {
     activeDB = mysql.createConnection({
         host: '127.0.0.1',
         user: 'user',
-        password: 'password',
+        password: 'DegioSD1806!',
         database: 'chatapp'
     });
 
@@ -54,7 +54,7 @@ if (process.env.CI_ENV === 'github') {
     const db = mysql.createConnection({
         host: 'localhost',
         user: 'root', // WHEN RUNNING LOCALLY USE 'root', WHEN COMMITING TO RUN INSIDE GITHUB ACTIONS, CHANGE THIS TO 'user'
-        password: 'password',
+        password: 'DegioSD1806!',
         database: 'chatapp'
     });
     db.connect((err) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "../Styling/ChatPage.css";
 import { useNavigate } from "react-router-dom";
@@ -17,10 +17,42 @@ function ChatPage() {
   // New state for channel filtering
   const [channelFilter, setChannelFilter] = useState("all"); // "all", "default", or "custom"
   const [filteredChannels, setFilteredChannels] = useState([]);
-
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef(null);
+  const emojiButtonRef = useRef(null); // New ref for the emoji button
   const [quotedMessage, setQuotedMessage] = useState(null);
 
   const navigate = useNavigate();
+
+  const emojiCategories = [
+    {
+      name: "Smileys",
+      emojis: ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎"]
+    },
+    {
+      name: "Emotions",
+      emojis: ["😏", "😒", "😞", "😔", "😟", "😕", "🙁", "☹️", "😣", "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡", "🤬", "😱", "😨", "😰", "😥", "😓", "🤗", "🤔", "🤭", "🤫", "🤥"]
+    },
+    {
+      name: "Gestures",
+      emojis: ["👋", "🤚", "✋", "🖐️", "👌", "🤌", "🤏", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉", "👆", "👇", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", "🤲", "🙏"]
+    },
+    {
+      name: "Animals",
+      emojis: ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦", "🦅", "🦆", "🦉", "🐺", "🐗", "🐴", "🦄"]
+    },
+    {
+      name: "Food",
+      emojis: ["🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🌽", "🍟", "🍕", "🌭", "🍔", "🍗"]
+    }
+  ];
+
+  // Handle emoji click
+  const handleEmojiClick = (emoji) => {
+    console.log("Emoji clicked:", emoji);
+    setNewMessage(prevMsg => prevMsg + emoji);
+    setShowEmojiPicker(false);
+  };
 
   // Fetch channel messages when a channel is selected
   useEffect(() => {
@@ -131,6 +163,16 @@ const fetchChannelMessages = async (channelName) => {
     // Format for database (using ISO format for consistency)
     const dbTime = currentTime.toISOString();
     
+    let messageData = {
+      text: newMessage,
+      quoteData: quotedMessage ? {
+        sender: quotedMessage.username || quotedMessage.sender,
+        text: quotedMessage.text
+      } : null
+    };
+
+    // Convert to JSON string for storage in the database
+    const messageJSON = JSON.stringify(messageData);
     try {
       const response = await axios.post(
         "http://localhost:3001/sendMessage", 
@@ -155,6 +197,7 @@ const fetchChannelMessages = async (channelName) => {
         
         setChats(prevChats => [...prevChats, newChatMessage]);
         setNewMessage("");
+        setQuotedMessage(null); // Clear quoted message after sending
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -251,10 +294,28 @@ const fetchChannelMessages = async (channelName) => {
     }
   }
   const handleQuoteMessage = (msg) => {
+    let messageToQuote = msg;
+
+    // Check if the message text is in JSON format
+    if (typeof msg.chat_content === 'string' && msg.chat_content.startsWith('{')) {
+      try {
+        const parsedMsg = JSON.parse(msg.chat_content);
+        messageToQuote = {
+          ...msg,
+          chat_content: parsedMsg.text, // Extract text from the parsed JSON
+        };
+      } catch (e) {
+        console.error("Error parsing quoted message:", e);
+      }
+    }
     // Set the quoted message state when a message is quoted
-    setQuotedMessage(msg);
+    setQuotedMessage(messageToQuote);
+    const inputField = document.querySelector('.input-container input');
+    if (inputField) {
+      inputField.focus();
+    }
     // Optionally, you can also set the message in the input field
-    setNewMessage(`> ${msg.chat_content}`);  // Adds the quoted message text to the new message input
+    setNewMessage(`> ${messageToQuote.chat_content}`);  // Adds the quoted message text to the new message input
   };
   const handleDeleteMessage = async (messageId) => {
     if (userRole !== "Admin") return;  // Check if the user is an admin
@@ -276,6 +337,66 @@ const fetchChannelMessages = async (channelName) => {
       alert("Failed to delete message.");
     }
   };
+
+  const clearQuotedMessage = () => {
+    setQuotedMessage(null);
+    // Remove the quote from the message input if it starts with a quote
+    if (newMessage.startsWith('>')) {
+      const lines = newMessage.split('\n\n');
+      if (lines.length > 1) {
+        setNewMessage(lines.slice(1).join('\n\n'));
+      } else {
+        setNewMessage('');
+      }
+    }
+  };
+
+  const messagesEndRef = useRef(null);
+  
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      scrollToBottom();
+    }
+  }, [chats]);
+
+  const toggleEmojiPicker = (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
+    console.log("Toggle emoji picker clicked!");
+    console.log("Current state:", showEmojiPicker);
+    setShowEmojiPicker(prevState => !prevState);
+  };
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      // Check if the click is outside both the emoji picker and the emoji button
+      if (
+        emojiPickerRef.current && 
+        !emojiPickerRef.current.contains(event.target) && 
+        emojiButtonRef.current && 
+        !emojiButtonRef.current.contains(event.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    }
+
+    // Only add the event listener if the emoji picker is shown
+    if (showEmojiPicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
 
   return (
     <div className="app-container">
@@ -356,47 +477,132 @@ const fetchChannelMessages = async (channelName) => {
               </div>
               <div className="messages-container">
                 {chats.length > 0 ? (
-                  chats.map((msg, index) => (
-                    <div
-                      key={index}
-                      className={`message ${msg.username === username ? "user-message" : "other-message"}`}
-                    >
-                      <div className="message-header">
-                        <span className="message-sender">{msg.username}</span>
-                        <span className="message-time">{msg.chat_time}</span>
-                        <div className="message-actions">
-                          {/* Quote button */}
-                          <button className="quote-button" onClick={() => handleQuoteMessage(msg)} title="Quote this message">
-                            💬
+                  chats.map((msg, index) => {
+                  // Try to parse the message content if it's in JSON format
+                  let chat_content = msg.text;
+                  let quoteData = null;
+                          
+                  try {
+                  // Check if the message is already in our new format (object with quoteData)
+                    if (msg.quoteData) {
+                      quoteData = msg.quoteData;
+                    } 
+                  // Try to parse the message as JSON (for messages from the database)
+                  else if (typeof msg.text === 'string' && msg.text.startsWith('{') && msg.text.includes('quoteData')) {
+                    const parsedMsg = JSON.parse(msg.text);
+                    chat_content = parsedMsg.text;
+                    quoteData = parsedMsg.quoteData;
+                  }
+                  // Check for legacy format with '> sender: text\n\n' pattern
+                  else if (typeof msg.text === 'string' && msg.text.startsWith('> ') && msg.text.includes('\n\n')) {
+                    const parts = msg.text.split('\n\n');
+                    const quotePart = parts[0].substring(2); // Remove '> '
+                    const quoteParts = quotePart.split(': ');
+                              
+                    if (quoteParts.length >= 2) {
+                      quoteData = {
+                        sender: quoteParts[0],
+                        text: quoteParts.slice(1).join(': ')
+                      };
+                      chat_content = parts.slice(1).join('\n\n');
+                    }
+                  }
+                } catch (e) {
+                  console.error("Error parsing message:", e);
+                  // If parsing fails, use the original text
+                  chat_content = msg.text;
+                }
+                          
+                return (                          
+                  <div
+                    key={index}
+                    className={`message ${msg.username === username ? "user-message" : "other-message"}`}
+                  >
+                    <div className="message-header">
+                      <span className="message-sender">{msg.username}</span>
+                      <span className="message-time">{msg.chat_time}</span>
+                      <div className="message-actions">
+                        {/* Quote button */}
+                        <button className="quote-button" onClick={() => handleQuoteMessage(msg)} title="Quote this message">
+                          💬
+                        </button>
+                        {/* Delete button (visible only for admin) */}
+                        {userRole === "Admin" && (
+                          <button className="delete-button" onClick={() => handleDeleteMessage(msg.id)} title="Delete this message">
+                            🗑️
                           </button>
-                          {/* Delete button (visible only for admin) */}
-                          {userRole === "Admin" && (
-                              <button className="delete-button" onClick={() => handleDeleteMessage(msg.id)} title="Delete this message">
-                                🗑️
-                              </button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="message-body">
-                        {msg.chat_content}
+                        )}
                       </div>
                     </div>
-                  ))
-                ) : (
+                    <div className={`message-body ${quoteData ? 'message-body-with-quote' : ''}`}>
+                      {quoteData && (
+                        <div className="quoted-reply">
+                          <div className="quoted-reply-sender">{quoteData.sender}</div>
+                          <div className="quoted-reply-text">{quoteData.text}</div>
+                        </div>
+                      )}                                
+                      {msg.chat_content}
+                    </div>
+                  </div>
+                 );
+                })
+              ) : (
                   <div className="empty-state">
                     <p>No messages in this channel yet.</p>
                     <p>Be the first to send a message!</p>
                   </div>
                 )}
+              <div ref={messagesEndRef} />
               </div>
               <div className="input-container">
-                {quotedMessage && quotedMessage.username && quotedMessage.chat_content && (
-                    <div className="quoted-message">
-    <span className="quoted-sender">
-      {quotedMessage.username === username ? "You" : quotedMessage.username}
-    </span>
-                      <div>{quotedMessage.chat_content}</div>
+                {quotedMessage && (
+                  <div className="quoted-message">
+                  {/* Displaying quoted message with sender and message content */}
+                  <div className="quoted-reply">
+                    <div className="quoted-reply-sender">
+                      {quotedMessage.username === username ? "You" : quotedMessage.username}
                     </div>
+                    <div className="quoted-reply-text">{quotedMessage.chat_content}</div>
+                  </div>
+
+                  {/* Close button to clear the quoted message */}
+                  <button className="close-quote" onClick={clearQuotedMessage} title="Remove quote">
+                    ✕
+                  </button>
+                  </div>
+                )}
+                <div className="input-tools">
+                  <button 
+                    ref={emojiButtonRef}
+                    className="emoji-button" 
+                    onClick={toggleEmojiPicker}
+                  >
+                    😊
+                  </button>
+                </div>
+                {showEmojiPicker && (
+                  <div className="emoji-picker-container" ref={emojiPickerRef}>
+                    <div className="emoji-picker-custom">
+                      <div className="emoji-categories">
+                        {emojiCategories.map((category, catIndex) => (
+                          <div key={catIndex} className="emoji-category">
+                            <div className="category-name">{category.name}</div>
+                            <div className="emoji-grid">
+                              {category.emojis.map((emoji, emojiIndex) => (
+                                <button
+                                  key={emojiIndex}
+                                  className="emoji-item"
+                                  onClick={() => handleEmojiClick(emoji)}
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 )}
                 <input
                   type="text"

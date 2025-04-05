@@ -555,6 +555,10 @@
   background-color: red;
 }
 
+.status-button.away {
+  background-color: yellow;
+}
+
 .last-active {
   font-size: 0.8rem;
   color: #888;
