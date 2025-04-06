@@ -25,6 +25,8 @@ function ChatPage() {
 
   const navigate = useNavigate();
 
+  const fileInputRef = useRef(null);
+
   const emojiCategories = [
     {
       name: "Smileys",
@@ -53,6 +55,16 @@ function ChatPage() {
     console.log("Emoji clicked:", emoji);
     setNewMessage(prevMsg => prevMsg + emoji);
     setShowEmojiPicker(false);
+  };
+
+  const getMentions = (text) => {
+    const regex = /@(\w+)/g;
+    const mentions = [];
+    let match;
+    while ((match = regex.exec(text)) !== null){
+      mentions.push(match[1]);
+    }
+    return mentions;
   };
 
   // Fetch channel messages when a channel is selected
@@ -153,6 +165,14 @@ const fetchChannelMessages = async (channelName) => {
 
   const handleChannelMessage = async () => {
     if (newMessage.trim() === "" || !selectedChannel) return;
+
+    const mentions = getMentions(newMessage);
+    mentions.forEach(userName => {
+      if (userName !== username) {
+        console.log(`Alert: ${userName}, you were mentioned by ${username}`);
+        alert(`${userName}, you were mentioned by ${username}!`);
+  }
+});
     
     const currentTime = new Date();
     // Format for display
