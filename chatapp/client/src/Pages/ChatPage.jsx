@@ -676,16 +676,6 @@ const fetchChannelMessages = async (channelName) => {
                 />
               </div>
               )}
-              {/* <div className="form-group checkbox-group">
-                <label>
-                  <input
-                      type="checkbox"
-                      checked={isDefault}
-                      onChange={(e) => setIsDefault(e.target.checked)}
-                  />
-                  Make this a default channel
-                </label>
-              </div> */}
               <div className="form-buttons">
                 <button type="submit" className="primary-button">Create</button>
                 <button type="button" className="secondary-button" onClick={() => setChannelAdd(false)}>

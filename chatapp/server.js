@@ -19,7 +19,7 @@ if (process.env.CI_ENV === 'github') {
     activeDB = mysql.createConnection({
         host: '127.0.0.1',
         user: 'user',
-        password: 'DegioSD1806!',
+        password: 'password',
         database: 'chatapp'
     });
 
@@ -54,7 +54,7 @@ if (process.env.CI_ENV === 'github') {
     const db = mysql.createConnection({
         host: 'localhost',
         user: 'root', // WHEN RUNNING LOCALLY USE 'root', WHEN COMMITING TO RUN INSIDE GITHUB ACTIONS, CHANGE THIS TO 'user'
-        password: 'DegioSD1806!',
+        password: 'password',
         database: 'chatapp'
     });
     db.connect((err) => {
@@ -149,19 +149,6 @@ app.post('/login', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
-
-// Logout route
-// app.post('/logout', (req, res) => {
-//     console.log("Before logout:", req.session);
-//     req.session.destroy((err) => {
-//         if (err) {
-//             console.error("Error destroying session:", err);
-//             return res.status(500).send("Failed to log out");
-//         }
-//         console.log("After logout:", req.session);
-//         res.status(200).send("Logged out successfully");
-//     });
-// });
 
 app.post('/logout', async (req, res) => {
     const userId = req.session.userId;
