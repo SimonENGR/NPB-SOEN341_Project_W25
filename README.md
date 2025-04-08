@@ -14,7 +14,7 @@ Communication is a must when it comes to working on large projects, maintaining 
 Simon Guidon(Backend, Database)  
 Emily Ng Youn Chen(Frontend, Documentation)  
 Diego Samanez Denis(Backend, Database, Documentation)  
-George Nashed(Frontend)  
+George Nashed(Frontend, Documentation)  
 Rohan Kumar(Backend, Database)  
 Muthui Mureithi(Backend)  
 
