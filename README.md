@@ -11,12 +11,12 @@ Communication is a must when it comes to working on large projects, maintaining 
 </p>
 
 # Team members
-Simon Guidon(Backend, Database)  
-Emily Ng Youn Chen(Frontend, Documentation)  
-Diego Samanez Denis(Backend, Database, Documentation)  
-George Nashed(Frontend, Documentation)  
-Rohan Kumar(Backend, Database)  
-Muthui Mureithi(Backend)  
+Simon Guidon(Backend, Database)                           Github ID: SimonENGR
+Emily Ng Youn Chen(Frontend, Documentation)               Github ID: enyc24
+Diego Samanez Denis(Backend, Database, Documentation)     Github ID: DiegoSamanezDenis
+George Nashed(Frontend, Documentation)                    Github ID: georgenashed234
+Rohan Kumar(Backend, Database)                            Github ID: deadxrk
+Muthui Mureithi(Backend)                                  Github ID: Montoy22
 
 # Technologies
 React.js  
