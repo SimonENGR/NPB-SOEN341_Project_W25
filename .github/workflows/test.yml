@@ -1,0 +1,79 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+      - cicdtesting
+      - status
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CI_ENV: github
+      NODE_ENV: test
+
+    services:
+      mysql:
+        image: mysql:8.0
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: chatapp
+          MYSQL_USER: user
+          MYSQL_PASSWORD: password
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.14.0
+
+      - name: Navigate to chatapp and install dependencies
+        run: |
+          cd chatapp
+          npm install
+
+      - name: Fix permissions for node-pre-gyp and rebuild native modules
+        run: |
+          cd chatapp
+          chmod +x ./node_modules/.bin/node-pre-gyp
+          npm uninstall bcrypt
+          npm install bcrypt --build-from-source
+          npm rebuild sqlite3
+
+      - name: Fix permissions for Jest and cross-env
+        run: |
+          cd chatapp
+          chmod +x ./node_modules/.bin/cross-env
+          chmod +x ./node_modules/.bin/jest
+
+      - name: Initialize Database and User
+        run: |
+          sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -u root -proot < SETUP.sql
+
+      - name: Verify MySQL Setup
+        run: |
+          sudo apt-get install -y mysql-client
+          mysql -h 127.0.0.1 -u root -proot -e "SHOW DATABASES;"
+
+      - name: Run tests
+        run: |
+          cd chatapp
+          npm test -- --detectOpenHandles --forceExit
+          
+      - name: List Open Processes After Tests
+        run: |
+          ps aux
+          lsof
+          netstat -tulpn
+

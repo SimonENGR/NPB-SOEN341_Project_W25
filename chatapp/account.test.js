@@ -1,22 +1,36 @@
-const mysql = require('mysql2');
-const app = require('./server.js');
+// account.test.js
+const { app, activeDB } = require('./server.js');
 const request = require('supertest');
 
-describe("POST /register", () => {
+let userCounter = 127; // Start with 127 as the base number
 
+const getNextTestUser = () => {
+    const username = `abc${userCounter}`;
+    const email = `abc${userCounter}@hotmail.com`;
+    const password = `abc${userCounter}`;
+    userCounter++; // Increment for the next test
+    return { username, email, password };
+};
+
+describe("POST /register", () => {
     it("should create a new account with valid data", async () => {
+        const { username, email, password } = getNextTestUser();
+    
+        console.log("Test running with data:", { username, email, password });
+    
         const response = await request(app)
             .post('/register')
             .send({
-                username: 'simon13',
-                email: 'simon13@hotmail.com',
-                password: 'simon13',
+                username,
+                email,
+                password,
                 role: 'Admin'
-            })
-        console.log(response.body);
-        expect(response.status).toBe(201);  // Expecting 201 for successful creation
+            });
+    
+        console.log("Test response:", response.body);
+        expect(response.status).toBe(201);
     });
-
+    
     it("should return an error if the username is missing", async () => {
         const response = await request(app)
             .post("/register")
@@ -25,9 +39,7 @@ describe("POST /register", () => {
                 email: "simon444@hotmail.com",
                 password: "simon444"
             });
-
-        expect(response.status).toBe(500);  // Bad Request
-
+        expect(response.status).toBe(500);
     });
 
     it("should return an error if the email is missing", async () => {
@@ -38,7 +50,6 @@ describe("POST /register", () => {
                 email: "",
                 password: "simon444"
             });
-
         expect(response.status).toBe(500);
     });
 
@@ -50,9 +61,7 @@ describe("POST /register", () => {
                 email: "simon555@hotmail.com",
                 password: ""
             });
-
         expect(response.status).toBe(500);
-
     });
 });
 
@@ -66,7 +75,6 @@ describe("POST /login", () => {
                 username: "",
                 password: "simon3"
             });
-
         expect(response.status).toBe(400);
     });
 
@@ -77,18 +85,38 @@ describe("POST /login", () => {
                 username: "a",  // Assuming this username exists in the database
                 password: "simon4"   // Wrong password
             });
-
-        expect(response.status).toBe(400); // Unauthorized
+        expect(response.status).toBe(400);
     });
 
     it("should return a success message if the username and password are correct", async () => {
         const response = await request(app)
             .post("/login")
             .send({
-                username: "a",  // Assuming this username exists in the database
-                password: "a"   // Correct password
+                username: "abc127",  // Assuming this username exists in the database
+                password: "abc127"   // Correct password
             });
+        expect(response.status).toBe(200);
+    });
 
-        expect(response.status).toBe(200);  // OK
+    it("should have abc127 user present in the database", async () => {
+        const [rows] = await activeDB.promise().query(
+            "SELECT * FROM users WHERE username = ?",
+            ["abc127"]
+        );
+        console.log("User record from DB:", rows);
+        expect(rows.length).toBeGreaterThan(0);
     });
 });
+
+afterAll(async () => {
+    console.log("Closing database connection...");
+    await activeDB.end();
+    console.log("Database connection closed.");
+
+    console.log("Active handles:");
+    console.log(process._getActiveHandles());
+    console.log("Active requests:");
+    console.log(process._getActiveRequests());
+});
+
+
