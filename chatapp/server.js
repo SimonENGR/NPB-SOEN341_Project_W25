@@ -11,7 +11,7 @@ const app = express();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { upload } = require('@testing-library/user-event/dist/cjs/utility/index.js');
+// const { upload } = require('@testing-library/user-event/dist/cjs/utility/index.js');
 
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json()); // Ensure that the body parser is configured correctly
@@ -437,7 +437,7 @@ app.get("/getChannels", authMiddleware, async (req, res) => {
   // Improved send message endpoint to handle channel messages better
 
 app.post("/sendMessage", authMiddleware, async (req, res) => {
-    const { channelName, chat_content, chat_time, dm, receiver } = req.body;
+    const { channelName, chat_content, chat_time, dm, receiver, isImage } = req.body;
     const username = req.session.username;
     // Validate based on message type (DM or channel message)
     if (dm && (!chat_content || !receiver)) {
@@ -478,7 +478,7 @@ app.get("/getMessages/:channelName", authMiddleware, async (req, res) => {
       console.log(`Fetching messages for channel: ${channelName}`); // Debug log
       
       const query = `
-        SELECT id, username, chat_content, chat_time 
+        SELECT id, username, chat_content, chat_time, isImage
         FROM all_chats_in_haven 
         WHERE channelName = ? AND dm = 0
         ORDER BY chat_time ASC

@@ -22,6 +22,9 @@ function ChatPage() {
   const emojiPickerRef = useRef(null);
   const emojiButtonRef = useRef(null); // New ref for the emoji button
   const [quotedMessage, setQuotedMessage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -49,6 +52,121 @@ function ChatPage() {
       emojis: ["🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🌽", "🍟", "🍕", "🌭", "🍔", "🍗"]
     }
   ];
+
+  //Handle file selection for image upload
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.match('image.*')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    //limit size of image 
+    if(file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+
+    //Create preview 
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  //Cancel image upload 
+  const cancelImageUpload = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const openFilePicker = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }
+
+  //Upload image and send 
+  const uploadAndSendImage = async () => {
+    if (!selectedImage || !selectedChannel){
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      //Create form data 
+      const formData = new FormData();
+      formData.append('image', selectedImage);
+
+      //Upload image 
+      const uploadResponse = await axios.post(
+        'http://localhost:3001/uploadImage', 
+        formData,
+        {
+          withCredentials: true, 
+          headers: {
+            'Content-Type' : 'multipart/form-data'
+          }
+        }
+      );
+
+      if (uploadResponse.data.success) {
+        const imagePath = uploadResponse.data.filePath; 
+        const timestamp = new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const timestampDB = new Date().toISOString().slice(0,19).replace('T', ' ');
+
+        //Send message with image path 
+        const response = await axios.post(
+          "http://localhost:3001/sendMessage",
+          {
+            channelName: selectedChannel.channelName, 
+            chat_content: imagePath,
+            chat_time: timestampDB, 
+            dm: 0, 
+            receiver: null,
+            isImage: 1
+          },
+          {withCredentials: true}
+        );
+
+        if (response.data.success) {
+          const newChatMessage = {
+            username: username,
+            chat_content: imagePath,
+            timestamp,
+            isImage: true
+          };
+
+          setChats(prevChats => [...prevChats, newChatMessage]);
+
+          //Clear image selection
+          setSelectedImage(null);
+          setImagePreview(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+        }
+      }
+    }catch (error) {
+      console.error("Error uploading image: ", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Handle emoji click
   const handleEmojiClick = (emoji) => {
@@ -499,8 +617,42 @@ const fetchChannelMessages = async (channelName) => {
               <div className="messages-container">
                 {chats.length > 0 ? (
                   chats.map((msg, index) => {
+                    if (msg.isImage) {
+                      return (
+                        <div
+                        key={index}
+                        className={`message ${msg.username === username ? "user-message" : "other-message"}`}
+                      >
+                        <div className="message-header">
+                          <span className="message-sender">
+                            {msg.username}
+                          </span>
+                          <span className="message-time">{msg.timestamp}</span>
+                          <div className="message-actions">
+                            {userRole === "Admin" && (
+                              <button
+                                className="delete-button"
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                title="Delete this message"
+                              >
+                                🗑️
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="message-body image-message">
+                          <img
+                            src={`http://localhost:3001${msg.chat_content}`}
+                            alt="Shared image"
+                            className="shared-image"
+                            onClick={() => window.open(`http://localhost:3001${msg.chat_content}`, '_blank')}></img>
+                          
+                        </div>
+                      </div>
+                      )
+                    }
                   // Try to parse the message content if it's in JSON format
-                  let chat_content = msg.text;
+                  let chat_content = msg.chat_content;
                   let quoteData = null;
                           
                   try {
@@ -509,13 +661,13 @@ const fetchChannelMessages = async (channelName) => {
                       quoteData = msg.quoteData;
                     } 
                   // Try to parse the message as JSON (for messages from the database)
-                  else if (typeof msg.text === 'string' && msg.text.startsWith('{') && msg.text.includes('quoteData')) {
-                    const parsedMsg = JSON.parse(msg.text);
+                  else if (typeof msg.chat_content === 'string' && msg.chat_content.startsWith('{') && msg.chat_content.includes('quoteData')) {
+                    const parsedMsg = JSON.parse(msg.chat_content);
                     chat_content = parsedMsg.text;
                     quoteData = parsedMsg.quoteData;
                   }
                   // Check for legacy format with '> sender: text\n\n' pattern
-                  else if (typeof msg.text === 'string' && msg.text.startsWith('> ') && msg.text.includes('\n\n')) {
+                  else if (typeof msg.chat_content === 'string' && msg.chat_content.startsWith('> ') && msg.chat_content.includes('\n\n')) {
                     const parts = msg.text.split('\n\n');
                     const quotePart = parts[0].substring(2); // Remove '> '
                     const quoteParts = quotePart.split(': ');
@@ -531,7 +683,7 @@ const fetchChannelMessages = async (channelName) => {
                 } catch (e) {
                   console.error("Error parsing message:", e);
                   // If parsing fails, use the original text
-                  chat_content = msg.text;
+                  chat_content = msg.chat_content;
                 }
                           
                 return (                          
@@ -576,6 +728,31 @@ const fetchChannelMessages = async (channelName) => {
               <div ref={messagesEndRef} />
               </div>
               <div className="input-container">
+                 {/*Image Preview*/}
+                 {imagePreview && (
+                  <div className="image-preview-container">
+                    <div className="image-preview">
+                      <img src={imagePreview} alt="Preview "></img>
+                      <div className="image-preview-actions">
+                        <button
+                          className="cancel-upload"
+                          onClick={cancelImageUpload}
+                          disabled={isUploading}
+                          >
+                          Cancel
+                        </button>
+                        <button
+                          className="send-image"
+                          onClick={uploadAndSendImage}
+                          disabled={isUploading}
+                          >
+                            {isUploading ? 'Sending...' : 'Send Image'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {quotedMessage && (
                   <div className="quoted-message">
                   {/* Displaying quoted message with sender and message content */}
@@ -600,6 +777,23 @@ const fetchChannelMessages = async (channelName) => {
                   >
                     😊
                   </button>
+                  {/*Image upload button*/}
+                  <button
+                    className="image-upload-button"
+                    onClick={openFilePicker}
+                    title="Send an image"
+                    >
+                    📷
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{display : 'none'}}
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    >
+                  </input>
+
                 </div>
                 {showEmojiPicker && (
                   <div className="emoji-picker-container" ref={emojiPickerRef}>
@@ -632,7 +826,7 @@ const fetchChannelMessages = async (channelName) => {
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                 />
-                <button className="send-button" onClick={handleChannelMessage}>
+                <button className="send-button" onClick={handleChannelMessage} disabled={imagePreview}>
                   Send
                 </button>
               </div>
