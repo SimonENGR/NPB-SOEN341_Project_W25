@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../Styling/DMPage.css";
+import { upload } from "@testing-library/user-event/dist/cjs/utility/upload.js";
 
 function DMPage() {
   const [users, setUsers] = useState([]);
@@ -19,6 +20,10 @@ function DMPage() {
   const emojiPickerRef = useRef(null);
   const emojiButtonRef = useRef(null); // New ref for the emoji button
   const [currentStatus, setCurrentStatus] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null); 
 
   // Common emoji categories and their emojis
   const emojiCategories = [
@@ -43,6 +48,114 @@ function DMPage() {
       emojis: ["🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🌽", "🍟", "🍕", "🌭", "🍔", "🍗"]
     }
   ];
+
+  //Handle file selection for image upload
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.match('image.*')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    //limit size of image 
+    if(file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+
+    //Create preview 
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  //Cancel image upload 
+  const cancelImageUpload = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  //Upload image and send 
+  const uploadAndSendImage = async () => {
+    if (!selectedImage || !selectedUser){
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      //Create form data 
+      const formData = new FormData();
+      formData.append('image', selectedImage);
+
+      //Upload image 
+      const uploadResponse = await axios.post(
+        'http://localhost:3001/uploadImage', 
+        formData,
+        {
+          withCredentials: true, 
+          headers: {
+            'Content-Type' : 'multipart/form-data'
+          }
+        }
+      );
+
+      if (uploadResponse.data.success) {
+        const imagePath = uploadResponse.data.filePath; 
+        const timestamp = new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const timestampDB = new Date().toISOString().slice(0,19).replace('T', ' ');
+
+        //Send message with image path 
+        const response = await axios.post(
+          "http://localhost:3001/sendMessage",
+          {
+            channelName: null, 
+            chat_content: imagePath,
+            chat_time: timestampDB, 
+            dm: 1, 
+            receiver: selectedUser.username,
+            isImage: 1
+          },
+          {withCredentials: true}
+        );
+
+        if (response.data.success) {
+          setMessages([...messages, {
+            text: imagePath, 
+            sender: "You",
+            timestamp,
+            username: currentUsername, 
+            isImage: true
+          }]);
+
+          //Clear image selection
+          setSelectedImage(null);
+          setImagePreview(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+        }
+      }
+    }catch (error) {
+      console.error("Error uploading image: ", error);
+      alert("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Handle emoji click
   const handleEmojiClick = (emoji) => {
@@ -349,6 +462,13 @@ function DMPage() {
     setShowEmojiPicker(prevState => !prevState);
   };
 
+  //Open file picker
+  const openFilePicker = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }
+
   // Close emoji picker when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -397,6 +517,7 @@ function DMPage() {
       window.removeEventListener('keypress', resetTimer);
     };
   }, []);  
+
   return (
     <div className="app-container">
       {/* Top Navigation Bar */}
@@ -494,6 +615,41 @@ function DMPage() {
               <div className="messages-container">
                 {messages.length > 0 ? (
                   messages.map((msg, index) => {
+                    //Check if image
+                    if (msg.isImage) {
+                      return (
+                        <div
+                        key={index}
+                        className={`message ${msg.username === currentUsername ? "user-message" : "other-message"}`}
+                      >
+                        <div className="message-header">
+                          <span className="message-sender">
+                            {msg.username === currentUsername ? "You" : msg.username || msg.sender}
+                          </span>
+                          <span className="message-time">{msg.timestamp}</span>
+                          <div className="message-actions">
+                            {isAdmin && (
+                              <button
+                                className="delete-button"
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                title="Delete this message"
+                              >
+                                🗑️
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="message-body image-message">
+                          <img
+                            src={`http://localhost:3001${msg.text}`}
+                            alt="Shared image"
+                            className="shared-image"
+                            onClick={() => window.open(`http://localhost:3001${msg.text}`, '_blank')}></img>
+                          
+                        </div>
+                      </div>
+                      )
+                    }
                     // Try to parse the message content if it's in JSON format
                     let messageText = msg.text;
                     let quoteData = null;
@@ -581,6 +737,31 @@ function DMPage() {
                 )}
                 <div ref={messagesEndRef} />
               </div>
+                {/*Image Preview*/}
+                {imagePreview && (
+                  <div className="image-preview-container">
+                    <div className="image-preview">
+                      <img src={imagePreview} alt="Preview "></img>
+                      <div className="image-preview-actions">
+                        <button
+                          className="cancel-upload"
+                          onClick={cancelImageUpload}
+                          disabled={isUploading}
+                          >
+                          Cancel
+                        </button>
+                        <button
+                          className="send-image"
+                          onClick={uploadAndSendImage}
+                          disabled={isUploading}
+                          >
+                            {isUploading ? 'Sending...' : 'Send Image'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               <div className="input-container">
                 {quotedMessage && (
                   <div className="quoted-message">
@@ -607,6 +788,22 @@ function DMPage() {
                   >
                     😊
                   </button>
+                  {/*Image upload button*/}
+                  <button
+                    className="image-upload-button"
+                    onClick={openFilePicker}
+                    title="Send an image"
+                    >
+                    📷
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{display : 'none'}}
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    >
+                  </input>
                 </div>
                 {showEmojiPicker && (
                   <div className="emoji-picker-container" ref={emojiPickerRef}>
