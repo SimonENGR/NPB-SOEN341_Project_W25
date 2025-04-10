@@ -43,10 +43,6 @@ CREATE TABLE IF NOT EXISTS dms (
 -- Add Index to 'users' table
 ALTER TABLE users ADD INDEX idx_isOnline (isOnline);
 
--- Update 'isOnline' column for specific user
--- Replace '?' with the actual user ID
-UPDATE users SET isOnline = 1 WHERE id = ?;
-
 -- Modify 'chat_content' column in 'all_chats_in_haven' table
 ALTER TABLE all_chats_in_haven MODIFY COLUMN chat_content TEXT NOT NULL;
 
