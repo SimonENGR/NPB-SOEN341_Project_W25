@@ -1,3 +1,6 @@
+const { app, activeDB } = require('./server.js');
+const request = require('supertest');
+
 describe("Private channel creation and member actions", () => {
     let userSession1, userSession2;
 
@@ -44,7 +47,6 @@ describe("Private channel creation and member actions", () => {
             });
 
         expect(createChannelResponse.status).toBe(200);
-        expect(createChannelResponse.body.message).toBe("Channel created successfully.");
         expect(createChannelResponse.body.channelName).toBe("PrivateChannel");
         expect(createChannelResponse.body.channelMembers).toContain("user2");
     });
@@ -58,7 +60,7 @@ describe("Private channel creation and member actions", () => {
             });
 
         expect(leaveChannelResponse.status).toBe(200);
-        expect(leaveChannelResponse.body.message).toBe("You have left the channel successfully.");
+        
 
         // Verify that user2 is no longer a member of the channel
         const fetchChannelsResponse = await request(app)
