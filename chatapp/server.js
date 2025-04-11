@@ -8,6 +8,25 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const app = express();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({storage});
 
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json()); // Ensure that the body parser is configured correctly
@@ -267,14 +286,16 @@ app.get('/getDMs/:receiver', authMiddleware, async (req, res) => {
         const formattedMessages = messages.map(msg => ({
             id: msg.id,
             text: msg.chat_content,
+            imageUrl: msg.imageUrl || null,
             sender: msg.username === currentUsername ? "You" : msg.username,
             timestamp: new Date(msg.chat_time).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
             }),
-            username: msg.username
+            username: msg.username,
         }));
         
+        console.log("Raw DB messages:", messages);
         res.json(formattedMessages);
     } catch (error) {
         console.error('Error fetching DMs:', error);
@@ -425,6 +446,43 @@ app.post("/sendMessage", authMiddleware, async (req, res) => {
     } catch (error) {
       console.error("Error inserting message:", error);
       res.status(500).json({ error: "Database error" });
+    }
+  });
+
+
+app.post('/sendMessageWithImage', authMiddleware, upload.single('image'), async (req, res) => {
+    const { channelName, chat_content, chat_time, dm, receiver } = req.body;
+    const username = req.session.username;
+    let imagePath = req.file ? `uploads/${req.file.filename}` : null;
+  
+    if (!chat_content && !imagePath) {
+        return res.status(400).json({ error: "Cannot send an empty message." });
+      }
+
+    try {
+      const date = chat_time ? new Date(chat_time) : new Date();
+      const messageTime = date.toISOString().slice(0, 19).replace('T', ' ');
+  
+      const query = `
+        INSERT INTO all_chats_in_haven 
+          (channelName, username, chat_content, chat_time, dm, receiver, imageUrl)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+  
+      await activeDB.promise().query(query, [
+        channelName || null,
+        username,
+        chat_content,
+        messageTime,
+        dm ? 1 : 0,
+        receiver || null,
+        imagePath
+      ]);
+  
+      res.json({ success: true, message: "Message sent with image", imageUrl: imagePath });
+    } catch (error) {
+      console.error("Error sending image message:", error);
+      res.status(500).json({ error: "Image message failed" });
     }
   });
 

@@ -19,6 +19,8 @@ function DMPage() {
   const emojiPickerRef = useRef(null);
   const emojiButtonRef = useRef(null); // New ref for the emoji button
   const [currentStatus, setCurrentStatus] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Common emoji categories and their emojis
   const emojiCategories = [
@@ -43,6 +45,16 @@ function DMPage() {
       emojis: ["🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🌽", "🍟", "🍕", "🌭", "🍔", "🍗"]
     }
   ];
+
+  const getMentions = (text) => {
+    const regex = /@(\w+)/g;
+    const mentions = [];
+    let match;
+    while ((match = regex.exec(text)) !== null){
+      mentions.push(match[1]);
+    }
+    return mentions;
+  };
 
   // Handle emoji click
   const handleEmojiClick = (emoji) => {
@@ -240,11 +252,19 @@ function DMPage() {
   };
 
   const handleSendMessage = async () => {
-    if (newMessage.trim() !== "" && selectedUser) {
+    if (newMessage.trim() !== "" || selectedUser) {
       const timestamp = new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       });
+      
+      const mentions = getMentions(newMessage);
+      mentions.forEach(userName => {
+       if (userName !== selectedUser) {
+         console.log(`Alert: ${userName}, you were mentioned by ${selectedUser}`);
+         alert(`${userName}, you were mentioned!`);
+   }
+ });
       
       // Format datetime in MySQL-compatible format
       const timestampDB = new Date().toISOString().slice(0, 19).replace('T', ' ');
@@ -258,22 +278,30 @@ function DMPage() {
         } : null
       };
       
+      const formData = new FormData();
+      formData.append("channelName", "");
+      formData.append("username", currentUsername);
+      formData.append("chat_content", JSON.stringify(messageData));
+      formData.append("chat_time", timestampDB);
+      formData.append("dm", 1);
+      formData.append("receiver", selectedUser.username);
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
       // Convert to JSON string for storage in the database
       const messageJSON = JSON.stringify(messageData);
       
       try {
         // Send message to backend
         const response = await axios.post(
-          "http://localhost:3001/sendMessage", 
-          {
-            channelName: null,
-            username: currentUsername,
-            chat_content: messageJSON, // Send the JSON string
-            chat_time: timestampDB,
-            dm: 1, // Use integer 1 instead of boolean true
-            receiver: selectedUser.username
-          },
-          { withCredentials: true }
+          "http://localhost:3001/sendMessageWithImage", formData,
+          { 
+            withCredentials: true, 
+            headers: {
+              "Content-Type": "multipart/form-data"
+            }
+          }
         );
   
         if (response.data.success) {
@@ -281,6 +309,7 @@ function DMPage() {
           setMessages([...messages, { 
             text: messageData.text,
             quoteData: messageData.quoteData,
+            imageUrl: response.data.imageUrl || null,
             sender: "You", 
             timestamp,
             username: currentUsername
@@ -288,10 +317,12 @@ function DMPage() {
           
           // Clear input field and quoted message
           setNewMessage("");
+          setSelectedImage(null);
           setQuotedMessage(null);
         }
       } catch (error) {
         console.error("Error sending DM:", error);
+        console.error("Error sending DM with image", error);
         if (error.response) {
           console.log("Error response:", error.response.data);
           alert(`Failed to send message: ${error.response.data.error || error.response.statusText}`);
@@ -569,6 +600,11 @@ function DMPage() {
                             </div>
                           )}
                           {messageText}
+                          {selectedImage && (
+                            <div className="image-preview">
+                              <img src={`http://localhost:3001/${msg.imageUrl}`} alt="sent media" style={{ maxWidth: '250px', marginTop: '10px' }} />
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -599,6 +635,16 @@ function DMPage() {
                     </button>
                   </div>
                 )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  id="image-upload"
+                  onChange={(e) => setSelectedImage(e.target.files[0])}
+                />
+                <label htmlFor="image-upload" className="upload-button" title="Send image">
+                  📷
+                </label>
                 <div className="input-tools">
                   <button 
                     ref={emojiButtonRef}
@@ -642,7 +688,7 @@ function DMPage() {
                 <button 
                   className="send-button" 
                   onClick={handleSendMessage}
-                  disabled={newMessage.trim() === ""}
+                  disabled={newMessage.trim() === "" && !selectedImage}
                 >
                   Send
                 </button>
