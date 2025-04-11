@@ -525,7 +525,7 @@ app.get("/getMessages/:channelName", authMiddleware, async (req, res) => {
         let members;
         try {
             members = JSON.parse(rows[0].channelMembers || '[]');
-        } catch (e) {
+        } catch {
             // If it's already an object, use it directly
             members = rows[0].channelMembers || [];
         }
