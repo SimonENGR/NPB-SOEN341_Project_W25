@@ -1,4 +1,5 @@
-Issue #,User Story Title/Task Title,Description/Associated Tasks,Due Date,Priority,"Risk (low, medium, high) + explanation",Responsible,Story Points
+| Issue # | User Story Title/Task Title | Description/Associated Tasks | Due Date,Priority | "Risk (low, medium, high) + explanation" | Responsible | Story Points |
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #95, TSK.011.001 - Setup the backend for email notifications, "Create a backend endpoint API to enable alerts to be sent form the user notifying to the notified user", 06/04/25, high, "medium - Minimally invasive to core components but still does require backend intervention", Diego Rohan, 4
 #96, TSK.011.002 - Design alert template for notification, "Create a clean alert template which will show the sender's name and message content", 07/04/25, low, "low - Simple code modifications within alert statements that don't affect any code", Diego Muthui, 2
 #97, TSK.011.003 - User can send alert notifications, "A user must be able to send an alert notification by typing "@name", where "name" is the name of the recipient", 06/04/25, high, "low - It does not interfere with any server.js code or modify any code in the pages, only small code addition", Diego Rohan, 3
