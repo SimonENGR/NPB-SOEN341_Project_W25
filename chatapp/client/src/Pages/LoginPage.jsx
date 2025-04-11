@@ -236,7 +236,7 @@ function LoginPage() {
                             {action === "Login" && (
                                 <div className="forgot-password">
                                <button
-                                onClick={() => {/* Handle forgot password */}}
+                                onClick={() => {alert("Oops! Forgot your password? Reach out to us at support@chathaven.com and we’ll help you get back in.");}}
                                  className="inline-block underline hover:no-underline focus:outline-none"
                                 style={{ background: "none", border: "none", padding: "0", margin: "0", cursor: "pointer", color: "#D1A0F1" }}>
                                  Forgot your password?
