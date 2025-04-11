@@ -375,7 +375,7 @@ function DMPage() {
          console.log(`Alert: ${userName}, you were mentioned by ${selectedUser}`);
          alert(`${userName}, you were mentioned!`);
         }
-      });
+      })
       // Format datetime in MySQL-compatible format
       const timestampDB = new Date().toISOString().slice(0, 19).replace('T', ' ');
       
