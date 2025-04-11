@@ -12,9 +12,8 @@ Communication is a must when it comes to working on large projects, maintaining 
 
 # How to run the code
 <p align="justify">
-Setting up MySQL
   
-  1) Create a new schema, set "safe_update" to '0' and execute it:
+  1) Setup MySQL by creating a new schema, setting "safe_update" to '0' and executing it:
   ```
      SET SQL_SAFE_UPDATES = 0;
   ```
@@ -72,7 +71,7 @@ Setting up MySQL
   3) Execute all "Create Table" and "Alter Table" commands.
 
   4) Change local database configuration.
-     Go to "chatapp" => "server.js".
+     Go to "chatapp" folder => "server.js".
      On line 61 and 62 replace the values in "database" and "password" to the ones you have.
      ```
      const db = mysql.createConnection({
@@ -84,7 +83,7 @@ Setting up MySQL
     
 
   5) Running the code.
-     Go back to "chatapp", then open the terminal.
+     Go back to the "chatapp" folder, then open the terminal.
      Run the command below:
      ```
      npm start
