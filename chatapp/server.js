@@ -397,7 +397,7 @@ app.post('/addChannel', authMiddleware, async (req, res) => {
         }   else {
             return res.status(404).send('User not found');
         }
-    }   catch (error) {
+    }   catch {
         return res.status(500).send('Error fetching user role');
     }
 });
