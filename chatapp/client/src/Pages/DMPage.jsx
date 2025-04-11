@@ -49,6 +49,16 @@ function DMPage() {
     }
   ];
 
+  const getMentions = (text) => {
+    const regex = /@(\w+)/g;
+    const mentions = [];
+    let match;
+    while ((match = regex.exec(text)) !== null){
+      mentions.push(match[1]);
+    }
+    return mentions;
+  };
+  
   //Handle file selection for image upload
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -359,6 +369,13 @@ function DMPage() {
         minute: "2-digit",
       });
       
+      const mentions = getMentions(newMessage);
+      mentions.forEach(userName => {
+       if (userName !== selectedUser) {
+         console.log(`Alert: ${userName}, you were mentioned by ${selectedUser}`);
+         alert(`${userName}, you were mentioned!`);
+        }
+      });
       // Format datetime in MySQL-compatible format
       const timestampDB = new Date().toISOString().slice(0, 19).replace('T', ' ');
       

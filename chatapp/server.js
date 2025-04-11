@@ -397,7 +397,7 @@ app.post('/addChannel', authMiddleware, async (req, res) => {
         }   else {
             return res.status(404).send('User not found');
         }
-    }   catch (error) {
+    }   catch {
         return res.status(500).send('Error fetching user role');
     }
 });
@@ -525,7 +525,7 @@ app.get("/getMessages/:channelName", authMiddleware, async (req, res) => {
         let members;
         try {
             members = JSON.parse(rows[0].channelMembers || '[]');
-        } catch (e) {
+        } catch {
             // If it's already an object, use it directly
             members = rows[0].channelMembers || [];
         }
