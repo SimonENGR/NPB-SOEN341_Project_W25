@@ -72,6 +72,7 @@ function ChatPage() {
     setSelectedImage(file);
 
     //Create preview 
+    // eslint-disable-next-line no-undef
     const reader = new FileReader();
     reader.onload = (e) => {
       setImagePreview(e.target.result);
@@ -318,7 +319,7 @@ const fetchChannelMessages = async (channelName) => {
         {
           channelName: selectedChannel.channelName,
           username: username,
-          chat_content: newMessage,
+          chat_content: messageJSON,
           chat_time: dbTime,
           dm: 0,
           receiver: null
@@ -327,10 +328,10 @@ const fetchChannelMessages = async (channelName) => {
       );
 
       if (response.data.success) {
-        // Optimistically add message to UI
         const newChatMessage = {
           username: username,
-          chat_content: newMessage,
+          quoteData: messageData.quoteData,
+          chat_content: newMessage.text,
           chat_time: displayTime
         };
         
@@ -433,6 +434,7 @@ const fetchChannelMessages = async (channelName) => {
     }
   }
   const handleQuoteMessage = (msg) => {
+    // Extract just the text content if the message has quoteData
     let messageToQuote = msg;
 
     // Check if the message text is in JSON format
@@ -453,8 +455,6 @@ const fetchChannelMessages = async (channelName) => {
     if (inputField) {
       inputField.focus();
     }
-    // Optionally, you can also set the message in the input field
-    setNewMessage(`> ${messageToQuote.chat_content}`);  // Adds the quoted message text to the new message input
   };
   const handleDeleteMessage = async (messageId) => {
     if (userRole !== "Admin") return;  // Check if the user is an admin
@@ -615,7 +615,8 @@ const fetchChannelMessages = async (channelName) => {
                 </h3>
               </div>
               <div className="messages-container">
-                {chats.length > 0 ? (
+                {
+                  chats.length > 0 ? (
                   chats.map((msg, index) => {
                     if (msg.isImage) {
                       return (
@@ -656,13 +657,9 @@ const fetchChannelMessages = async (channelName) => {
                   let quoteData = null;
                           
                   try {
-                  // Check if the message is already in our new format (object with quoteData)
-                    if (msg.quoteData) {
-                      quoteData = msg.quoteData;
-                    } 
                   // Try to parse the message as JSON (for messages from the database)
-                  else if (typeof msg.chat_content === 'string' && msg.chat_content.startsWith('{') && msg.chat_content.includes('quoteData')) {
-                    const parsedMsg = JSON.parse(msg.chat_content);
+                  if (typeof chat_content === 'string' && chat_content.startsWith('{') && chat_content.includes('quoteData')) {
+                    const parsedMsg = JSON.parse(chat_content);
                     chat_content = parsedMsg.text;
                     quoteData = parsedMsg.quoteData;
                   }
@@ -686,7 +683,7 @@ const fetchChannelMessages = async (channelName) => {
                   chat_content = msg.chat_content;
                 }
                           
-                return (                          
+                return (
                   <div
                     key={index}
                     className={`message ${msg.username === username ? "user-message" : "other-message"}`}
@@ -696,7 +693,11 @@ const fetchChannelMessages = async (channelName) => {
                       <span className="message-time">{msg.chat_time}</span>
                       <div className="message-actions">
                         {/* Quote button */}
-                        <button className="quote-button" onClick={() => handleQuoteMessage(msg)} title="Quote this message">
+                        <button className="quote-button" onClick={() => handleQuoteMessage(((
+                            {...msg,
+                            text: chat_content, // The parsed message content
+                          quoteData}))
+                          )} title="Quote this message">
                           💬
                         </button>
                         {/* Delete button (visible only for admin) */}
@@ -714,7 +715,7 @@ const fetchChannelMessages = async (channelName) => {
                           <div className="quoted-reply-text">{quoteData.text}</div>
                         </div>
                       )}                                
-                      {msg.chat_content}
+                      {chat_content}
                     </div>
                   </div>
                  );
