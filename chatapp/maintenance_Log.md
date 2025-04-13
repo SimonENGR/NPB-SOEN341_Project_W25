@@ -39,6 +39,10 @@ See: [`eslint-report-before.txt`](./eslint-report-before.txt)
 - **Fix**: Added `...globals.browser` in the  `eslit.config.mjs` to inform ESLint that the code runs in a browser environment 
 - **Rule**: `no-undef`
 
+#### 6. Fixed Quoting in Channels (Was working in DMs, fix by Muthui)
+- **Files**: `ChatPage.jsx`
+- **Fix**: Tweaked the code to properly quote in Channels, the same way it work in DMs
+- **Rule**: `Not-Applicable`
 
 
 

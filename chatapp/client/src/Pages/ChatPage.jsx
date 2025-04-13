@@ -301,14 +301,22 @@ const fetchChannelMessages = async (channelName) => {
     
     // Format for database (using ISO format for consistency)
     const dbTime = currentTime.toISOString();
-    
+    let messageData = {
+        text: newMessage,
+        quoteData: quotedMessage ? {
+        sender: quotedMessage.username || quotedMessage.sender,
+        text: quotedMessage.text
+      } : null
+    };
+    // Convert to JSON string for storage in the database
+    const messageJSON = JSON.stringify(messageData);
     try {
       const response = await axios.post(
         "http://localhost:3001/sendMessage", 
         {
           channelName: selectedChannel.channelName,
           username: username,
-          chat_content: newMessage,
+          chat_content: messageJSON,
           chat_time: dbTime,
           dm: 0,
           receiver: null
@@ -320,7 +328,8 @@ const fetchChannelMessages = async (channelName) => {
         // Optimistically add message to UI
         const newChatMessage = {
           username: username,
-          chat_content: newMessage,
+          quoteData: messageData.quoteData,
+          chat_content: newMessage.text,
           chat_time: displayTime
         };
         
@@ -605,7 +614,8 @@ const fetchChannelMessages = async (channelName) => {
                 </h3>
               </div>
               <div className="messages-container">
-                {chats.length > 0 ? (
+              {
+                  chats.length > 0 ? (
                   chats.map((msg, index) => {
                     if (msg.isImage) {
                       return (
@@ -651,8 +661,8 @@ const fetchChannelMessages = async (channelName) => {
                       quoteData = msg.quoteData;
                     } 
                   // Try to parse the message as JSON (for messages from the database)
-                  else if (typeof msg.chat_content === 'string' && msg.chat_content.startsWith('{') && msg.chat_content.includes('quoteData')) {
-                    const parsedMsg = JSON.parse(msg.chat_content);
+                  if (typeof chat_content === 'string' && chat_content.startsWith('{') && chat_content.includes('quoteData')) {
+                    const parsedMsg = JSON.parse(chat_content);
                     chat_content = parsedMsg.text;
                     quoteData = parsedMsg.quoteData;
                   }
@@ -686,7 +696,11 @@ const fetchChannelMessages = async (channelName) => {
                       <span className="message-time">{msg.chat_time}</span>
                       <div className="message-actions">
                         {/* Quote button */}
-                        <button className="quote-button" onClick={() => handleQuoteMessage(msg)} title="Quote this message">
+                        <button className="quote-button" onClick={() => handleQuoteMessage(((
+                            {...msg,
+                            text: chat_content, // The parsed message content
+                          quoteData}))
+                          )} title="Quote this message">
                           💬
                         </button>
                         {/* Delete button (visible only for admin) */}
@@ -704,7 +718,7 @@ const fetchChannelMessages = async (channelName) => {
                           <div className="quoted-reply-text">{quoteData.text}</div>
                         </div>
                       )}                                
-                      {msg.chat_content}
+                      {chat_content}
                     </div>
                   </div>
                  );
