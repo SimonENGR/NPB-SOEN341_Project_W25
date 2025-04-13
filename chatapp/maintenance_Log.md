@@ -44,7 +44,15 @@ See: [`eslint-report-before.txt`](./eslint-report-before.txt)
 - **Fix**: Tweaked the code to properly quote in Channels, the same way it work in DMs
 - **Rule**: `Not-Applicable`
 
+#### 7. Unrecognized words "it", "describe" and "expect" from test files 
+- **Files**: `account.test.js, default.test.js, channels.test.js`
+- **Fix**: Added code lines 20-28 in the  `eslit.config.mjs` to enable the Jest environment for the test files
+- **Rule**: `no-undef`
 
+#### 8. Unrecognized words "it", "describe" and "expect" from test files 
+- **Files**: `DMPage.jsx`
+- **Fix**: Removed line 5 where the varibale `upload` is declared since it is never used 
+- **Rule**: `no-unused-vars`
 
 ---
 

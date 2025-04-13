@@ -16,5 +16,15 @@ export default defineConfig([
       },
     },
   },
+
+  //fixes for test files 
+  {
+    files: ["**/*.test.js"],
+    languageOptions: {
+      globals: {
+        ...globals.jest, //allows adds, describe, it from the test files 
+      },
+    },
+  },
   pluginReact.configs.flat.recommended,
 ]);
