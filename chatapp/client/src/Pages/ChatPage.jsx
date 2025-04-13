@@ -302,16 +302,6 @@ const fetchChannelMessages = async (channelName) => {
     // Format for database (using ISO format for consistency)
     const dbTime = currentTime.toISOString();
     
-    let messageData = {
-      text: newMessage,
-      quoteData: quotedMessage ? {
-        sender: quotedMessage.username || quotedMessage.sender,
-        text: quotedMessage.text
-      } : null
-    };
-
-    // Convert to JSON string for storage in the database
-    const messageJSON = JSON.stringify(messageData);
     try {
       const response = await axios.post(
         "http://localhost:3001/sendMessage", 
@@ -840,7 +830,6 @@ const fetchChannelMessages = async (channelName) => {
           )}
         </div>
       </div>
-
       {/* Modal for adding channels */}
       {showChannelAdd && (
         <div className="modal-overlay">
@@ -857,19 +846,26 @@ const fetchChannelMessages = async (channelName) => {
                   required
                 />
               </div>
-              {userRole === "User" && (<div className="form-group">
-                <label>Members</label>
-                <input
-                  type="text"
-                  placeholder="Enter usernames (comma-separated)"
-                  value={channelMembers}
-                  onChange={(e) => {setChannelMembers(e.target.value);
-                                    setIsDefault(false);}
-                  }
-                  required
-                />
-              </div>
-              )}
+              <div className="form-group">
+                    <label>Members</label>
+                    <input
+                        type="text"
+                        placeholder="Enter usernames (comma-separated)"
+                        value={channelMembers}
+                        onChange={(e) => setChannelMembers(e.target.value)}
+                        required
+                    />
+                  </div>
+                  <div className="form-group checkbox-group">
+                    <label>
+                      <input
+                          type="checkbox"
+                          checked={isDefault}
+                          onChange={(e) => setIsDefault(e.target.checked)}
+                      />
+                      Make this a default channel
+                    </label>
+                  </div>
               <div className="form-buttons">
                 <button type="submit" className="primary-button">Create</button>
                 <button type="button" className="secondary-button" onClick={() => setChannelAdd(false)}>

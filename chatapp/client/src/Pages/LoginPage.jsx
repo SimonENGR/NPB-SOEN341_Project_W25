@@ -249,7 +249,7 @@ function LoginPage() {
                             <div className="auth-switch">
                                 {action === "Login" ? (
                                     <div className="create-account">
-                                        <p>Don't have an account?</p>
+                                        <p>Don&apos;t have an account?</p>
                                         <button
                                             onClick={() => setAction("Sign Up")}
                                             className="switch-button"
