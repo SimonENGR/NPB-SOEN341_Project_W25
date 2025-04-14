@@ -600,6 +600,44 @@ app.get("/getMessages/:channelName", authMiddleware, async (req, res) => {
       }
   };
 
+  app.post("/sendMentionAlert", authMiddleware, async (req, res) => {
+    const { mentionedUser, mentionedBy } = req.body;
+  
+    try {
+      await activeDB.promise().query(
+        `INSERT INTO mention_alerts (mentioned_user, mentioned_by) VALUES (?, ?)`,
+        [mentionedUser, mentionedBy]
+      );
+      res.status(200).json({ success: true });
+    } catch (err) {
+      console.error("Error saving mention alert:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  });
+
+  app.get("/getMentions", authMiddleware, async (req, res) => {
+    const username = req.session.username;
+  
+    try {
+      const [alerts] = await activeDB.promise().query(
+        `SELECT * FROM mention_alerts WHERE mentioned_user = ? AND is_read = FALSE`,
+        [username]
+      );
+  
+      // Mark them as read immediately
+      await activeDB.promise().query(
+        `UPDATE mention_alerts SET is_read = TRUE WHERE mentioned_user = ? AND is_read = FALSE`,
+        [username]
+      );
+  
+      res.json(alerts);
+    } catch (err) {
+      console.error("Error fetching mentions:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  });  
+  
+
   app.delete('/deleteMessage/:messageId', authMiddleware, async (req, res) => {
     try {
         const messageId = req.params.messageId;

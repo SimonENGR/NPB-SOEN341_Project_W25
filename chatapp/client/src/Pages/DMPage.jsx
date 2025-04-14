@@ -362,6 +362,21 @@ function DMPage() {
     setSelectedUser(user);
   };
 
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/getMentions", { withCredentials: true });
+        response.data.forEach(mention => {
+          window.alert(`You were mentioned by ${mention.mentioned_by}`);
+        });
+      } catch (error) {
+        console.error("Failed to fetch mention alerts", error);
+      }
+    }, 5000); // every 5 seconds
+  
+    return () => clearInterval(interval);
+  }, []);  
+
   const handleSendMessage = async () => {
     if (newMessage.trim() !== "" && selectedUser) {
       const timestamp = new Date().toLocaleTimeString([], {
@@ -371,11 +386,13 @@ function DMPage() {
       
       const mentions = getMentions(newMessage);
       mentions.forEach(userName => {
-       if (userName !== selectedUser) {
-         console.log(`Alert: ${userName}, you were mentioned by ${selectedUser}`);
-         alert(`${userName}, you were mentioned!`);
+        if (userName !== currentUsername) {
+          axios.post("http://localhost:3001/sendMentionAlert", {
+            mentionedUser: userName,
+            mentionedBy: currentUsername,
+          }, { withCredentials: true });
         }
-      });
+      });      
       // Format datetime in MySQL-compatible format
       const timestampDB = new Date().toISOString().slice(0, 19).replace('T', ' ');
       

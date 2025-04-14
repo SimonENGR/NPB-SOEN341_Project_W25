@@ -281,16 +281,33 @@ const fetchChannelMessages = async (channelName) => {
     setSelectedChannel(channel);
   };
 
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await axios.get("http://localhost:3001/getMentions", { withCredentials: true });
+        response.data.forEach(mention => {
+          window.alert(`You were mentioned by ${mention.mentioned_by}`);
+        });
+      } catch (error) {
+        console.error("Failed to fetch mention alerts", error);
+      }
+    }, 5000); // every 5 seconds
+  
+    return () => clearInterval(interval);
+  }, []);
+
   const handleChannelMessage = async () => {
     if (newMessage.trim() === "" || !selectedChannel) return;
 
     const mentions = getMentions(newMessage);
     mentions.forEach(userName => {
       if (userName !== username) {
-        console.log(`Alert: ${userName}, you were mentioned by ${username}`);
-        alert(`${userName}, you were mentioned by ${username}!`);
-  }
-});
+        axios.post("http://localhost:3001/sendMentionAlert", {
+          mentionedUser: userName,
+          mentionedBy: username,
+        }, { withCredentials: true });
+      }
+    });    
     
     const currentTime = new Date();
     // Format for display
