@@ -2,7 +2,7 @@
 
 # Objective
 <p align="justify">
-Our objective in this project is to develop a middle -fidelity prototype of a message exchanging platform over the span of 4 sprints, where each sprint has a duration of 2 weeks. The development of the product is done in groups of 6 following the Agile development apporach. Github is used as the platform of choice for version control, access control, bug tracking, software feature requests, task management, and continuous integration.
+Our objective in this project is to develop a middle -fidelity prototype of a message exchanging platform over the span of 4 sprints, where each sprint has a duration of 2 weeks. The development of the product is done in groups of 6 following the Agile development approach. Github is used as the platform of choice for version control, access control, bug tracking, software feature requests, task management, and continuous integration.
 </p>
 
 # Project detail
